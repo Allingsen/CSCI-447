@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 import random
+import sklearn
+import sklearn.model_selection
 
 class DataProcess():
     def __init__(self, names: list, missing_val: str= None, id_col: str=None) -> None:
@@ -80,15 +82,25 @@ class DataProcess():
         if self.categorical_cols or self.binned_cols:
             self.df = pd.get_dummies(self.df, columns=(self.categorical_cols + self.binned_cols), dtype=int)
 
-        
+        # Sends the class column to the end of the df
         self.df['class'] = self.df.pop('class')
-        print(self.df)
 
-    def k_fold_split(self) -> None:
-        pass
+
+    def k_fold_split(self, folds:int) -> list:
+        '''Splits the data into n folds and returns n training and test sets'''
+        cross_vals = list()
+        self.df = self.df.sample(frac=1).reset_index(drop=True)
+        skf = sklearn.model_selection.StratifiedKFold(n_splits=folds, shuffle=True, random_state=42)
+        inputs = self.df.drop('class', axis=1)
+        classes = self.df['class']
+        for train_index, test_index in skf.split(inputs, classes):
+            cross_vals.append((self.df.iloc[train_index], self.df.iloc[test_index]))
         
+        return cross_vals
+    
 x = DataProcess(['id',2,3,4,5,6,7,8,9,10,'class'], missing_val='?', id_col='id')
 x.loadCSV('Project_1/datasets/breast-cancer-wisconsin.data')
+x.k_fold_split(10)
 
 #x = DataProcess(['id',2,3,4,5,6,7,8,9,10,'class'], missing_val='?', id_col='id')
 #x.loadCSV('Project_1/datasets/glass.data')
