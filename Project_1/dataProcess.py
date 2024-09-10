@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import random
 
+
 class DataProcess():
     def __init__(self, names: list, missing_val: str= None, id_col: str=None) -> None:
         self.cols = names
@@ -80,18 +81,102 @@ class DataProcess():
         if self.categorical_cols or self.binned_cols:
             self.df = pd.get_dummies(self.df, columns=(self.categorical_cols + self.binned_cols), dtype=int)
 
-        
+        # Sends the class column to the end of the df, shuffles the data
         self.df['class'] = self.df.pop('class')
-        print(self.df)
+        self.df = self.df.sample(frac=1).reset_index(drop=True)
 
-    def k_fold_split(self) -> None:
-        pass
+    def _num_in_split(self, folds:int) -> list:
+        group_len = list()
+        examples = len(self.df)
+        fold_percent = examples / folds
+        for i in range(folds):
+            if examples/(folds-i) == np.ceil(fold_percent):
+                num_in_fold = np.ceil(fold_percent)
+            else:
+                num_in_fold = np.floor(fold_percent)
+            examples -= num_in_fold
+            group_len.append(num_in_fold)
+        return group_len
+
+    def _distr_folds(self, distr, group_len) -> list:
+        real_vals = self.df['class'].value_counts().values
+        values = np.array([0] * len(distr))
+        for i in group_len:
+            class_total = np.round(i * distr)
+            values = np.vstack((values, class_total))
+        col_sums = np.sum(values, axis=0)
         
+        test = real_vals == col_sums
+        change_val = -1
+        while not test.all():
+            condlist = [col_sums < real_vals, col_sums > real_vals]
+            choicelist = [values[change_val] +1, values[change_val] -1]
+            values[change_val] = np.select(condlist, choicelist, values[change_val])
+
+            col_sums = np.sum(values, axis=0)
+            test = real_vals == col_sums
+            change_val -=1
+
+        return(list(values[1:]))
+
+    def k_fold_split(self, folds:int) -> list:
+        '''Splits the data into n folds and returns n training and test sets'''  
+        # Creates a df for each class
+        classes = list()
+        for i in self.df['class'].unique():
+            classes.append(self.df[self.df['class'] == i])
+        # Gets the length of n folds, keeping all within a 1-example difference
+
+        group_len = self._num_in_split(folds)
+
+        # Calculates the distribution of the data between classes
+        class_names = self.df['class'].value_counts().keys()
+        distr = (self.df['class'].value_counts().values)/len(self.df)
+        cross_vals = [pd.DataFrame()] * folds
+
+        class_totals = self._distr_folds(distr, group_len)
+        mod_df = self.df
+        for i,num in enumerate(class_totals):
+            for j in range(len(num)):
+                sample = mod_df[mod_df['class'] == class_names[j]].sample(n=int(num[j]), replace=False)
+                mod_df.drop(sample.index, axis=0,inplace=True)
+                cross_vals[i] = pd.concat([cross_vals[i], sample], axis=0)
+
+        return cross_vals
+    
+    def introduce_noise(self, perc: float) -> pd.DataFrame:
+        '''Introduces noise by shuffling the attributes of perc percent of features,
+        while keeping the original class'''
+        mod_df = self.df
+        perc_samp = mod_df.sample(frac=perc, replace=False)
+        mod_df.drop(perc_samp.index, axis=0,inplace=True)
+        classes = perc_samp.pop('class')
+        if self.id_col:
+            ids = perc_samp.pop(self.id_col)
+        rng = np.random.default_rng()
+        shuffled_samp = pd.DataFrame()
+
+        for i in perc_samp.columns:
+            if i != self.id_col:
+                new_col = pd.Series(rng.permutation(perc_samp[i].values))
+                shuffled_samp.insert(len(shuffled_samp.columns), i, new_col)
+    
+        if self.id_col:
+            shuffled_samp.insert(0, self.id_col, list(ids))
+        shuffled_samp['class'] = list(classes)
+
+        return pd.concat([mod_df, shuffled_samp], axis=0, ignore_index=True)
+
+    
 x = DataProcess(['id',2,3,4,5,6,7,8,9,10,'class'], missing_val='?', id_col='id')
 x.loadCSV('Project_1/datasets/breast-cancer-wisconsin.data')
+x.introduce_noise(.10)
+x.k_fold_split(10)
 
 #x = DataProcess(['id',2,3,4,5,6,7,8,9,10,'class'], missing_val='?', id_col='id')
 #x.loadCSV('Project_1/datasets/glass.data')
+#x.introduce_noise(.10)#.to_csv('test1.csv')
+#x.k_fold_split(10)
 
 #x = DataProcess(['test',2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,'class'], '?')
 #x.loadCSV('Project_1/datasets/house-votes-84.data')
