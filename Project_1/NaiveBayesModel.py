@@ -100,6 +100,6 @@ class NaiveBayesModel:
                     if(any((column, feature_value) in zip(key, key[1:]) for key in self.conditional_prob_of_features) == False):
                         for Class in self.classes:
                             self.conditional_prob_of_features[(column, feature_value, Class)] = self.feature_prob_given_class(column, feature_value, Class)
-        print("\nConditional Probabilities of Features Equalling a Value Give a Class:\n(Keep in mind that Laplace smoothing was used)\n---------------------------------------------------------------------\n{}".format(self.conditional_prob_of_features))
+        print("\nConditional Probabilities of Features Equalling a Value Given a Class:\n(Keep in mind that Laplace smoothing was used)\n---------------------------------------------------------------------\n{}".format(self.conditional_prob_of_features))
 
 #--------------------------------------------------------------------------------------------------------------------------
