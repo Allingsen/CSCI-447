@@ -91,7 +91,10 @@ class NaiveBayesModel:
         print("\nPrior Probabilities of each Class:\n----------------------------------\n{}".format(self.prior_prob_of_classes))
 
         #Next, calculate the conditional probabilities of the features equalling a particular value given each class and save it to feature_prob_given_class
+        abcd = 0
         for column in self.dataframe:
+            abcd +=1
+            print(column, abcd)   # FOR ALEX -- PROGRESS TRACKER
             if(column != "id" and column != "class"):
                 for i in range(len(self.dataframe)):
                     feature_value = self.dataframe.loc[i, column]
