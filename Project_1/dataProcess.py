@@ -95,6 +95,7 @@ class DataProcess():
                 elif self.df[i].isnull().any():
                     self.df[i].fillna(self.df[i].mean(skipna=True), inplace=True)
 
+        print(self.df.shape)
         # Binning and one hot encoding
         self._bin_num_vals()
         # One hot encodes all categorical columns and binned columns
@@ -157,7 +158,8 @@ class DataProcess():
             test = real_vals == col_sums
             # Move to the next back distribution
             change_val -=1
-
+        print(distr)
+        print(values[1:]/70)
         # Do not include the first value as it is just a placeholder
         return(list(values[1:]))
 
@@ -192,6 +194,7 @@ class DataProcess():
                 cross_vals[i] = pd.concat([cross_vals[i], sample], axis=0, ignore_index=True)
         
         # Returns each fold in a list
+        print(len(cross_vals))
         return cross_vals
     
     #--------------------------------------------------------------------------------------------------------------------------

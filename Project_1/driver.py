@@ -91,6 +91,10 @@ def main():
         test_clean.load_data()
         test_clean.train_model()
 
+        print(test_clean.prior_prob_of_classes)
+        print(test_clean.class_probability)
+        print(test_clean.number_of_examples_in_class)
+
         # Makes predictions, then tests our results
         predicted_classes = test_clean.classify_all()
         print("\nPerformance Metrics\n-------------------\n0/1-Loss = {}\nRecall = {}".format(test_clean.zero_one_loss(predicted_classes), test_clean.recall(predicted_classes)))
