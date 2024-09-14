@@ -60,6 +60,8 @@ class DataProcess():
                 # Only bins the column if there are less bins then unique columns
                 if len(bins) < num_of_vals:
                     self.binned_cols.append(i)
+            
+            print(self.binned_cols)
 
     #--------------------------------------------------------------------------------------------------------------------------
 
