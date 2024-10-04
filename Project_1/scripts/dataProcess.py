@@ -60,8 +60,6 @@ class DataProcess():
                 # Only bins the column if there are less bins then unique columns
                 if len(bins) < num_of_vals:
                     self.binned_cols.append(i)
-            
-            print(self.binned_cols)
 
     #--------------------------------------------------------------------------------------------------------------------------
 
@@ -97,7 +95,6 @@ class DataProcess():
                 elif self.df[i].isnull().any():
                     self.df[i].fillna(self.df[i].mean(skipna=True), inplace=True)
 
-        print(self.df.shape)
         # Binning and one hot encoding
         self._bin_num_vals()
         # One hot encodes all categorical columns and binned columns
@@ -112,7 +109,6 @@ class DataProcess():
         # Sends the class column to the end of the df, shuffles the data
         self.df['class'] = self.df.pop('class')
         self.df = self.df.sample(frac=1).reset_index(drop=True)
-        print(self.df.shape)
     #--------------------------------------------------------------------------------------------------------------------------
 
     def _num_in_split(self, folds:int) -> list:
@@ -160,8 +156,6 @@ class DataProcess():
             test = real_vals == col_sums
             # Move to the next back distribution
             change_val -=1
-        print(distr)
-        print(values[1:]/70)
         # Do not include the first value as it is just a placeholder
         return(list(values[1:]))
 
@@ -196,7 +190,6 @@ class DataProcess():
                 cross_vals[i] = pd.concat([cross_vals[i], sample], axis=0, ignore_index=True)
         
         # Returns each fold in a list
-        print(len(cross_vals))
         return cross_vals
     
     #--------------------------------------------------------------------------------------------------------------------------

@@ -85,15 +85,11 @@ def main():
         # This allows for 10 experiements to be run on different data.
         test_df = i
         training_df = pd.concat([x for x in folds if not (x.equals(i))], axis=0, ignore_index=True)
-
+        print(training_df.head())
         # Initilizes and trains the model
         test_clean = ModelTest(training_df, test_df)
         test_clean.load_data()
         test_clean.train_model()
-
-        print(test_clean.prior_prob_of_classes)
-        print(test_clean.class_probability)
-        print(test_clean.number_of_examples_in_class)
 
         # Makes predictions, then tests our results
         predicted_classes = test_clean.classify_all()
