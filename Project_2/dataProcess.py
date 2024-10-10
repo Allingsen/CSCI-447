@@ -20,17 +20,32 @@ class DataProcess():
 
     #--------------------------------------------------------------------------------------------------------------------------
 
+    def get_cat_cols(self) -> list:
+        return [x for x in self.categorical_cols if x != 'class']
+    
+    #--------------------------------------------------------------------------------------------------------------------------
+
+    def get_num_cols(self) -> list:
+        return [x for x in self.cols if x not in self.categorical_cols and x != 'class']
+    
+    #--------------------------------------------------------------------------------------------------------------------------
+    
+    def get_df(self) -> pd.DataFrame:
+        return self.df
+    
+    #--------------------------------------------------------------------------------------------------------------------------
+
     def _num_or_cat(self, row: list) -> None:
         '''Determines if the column is numeric or categorical'''
         # Attempts to map the row to ints
         try:
-            new_row = list(map(lambda x: int(x), row))
+            new_row = list(map(lambda x: float(x), row))
             return new_row
         # If that fails, check if there are missing values
         except ValueError:
             new_row = list()
             for i in range(len(row)):
-                try: new_row.append(int(row[i]))
+                try: new_row.append(float(row[i]))
                 # If not missing val, and i is not already a categorical column, add it to categoical columns
                 except:
                     if row[i] != self.missing_val and self.cols[i] not in self.categorical_cols and self.cols[i]: 
@@ -49,7 +64,24 @@ class DataProcess():
         return random.choices(values, weights, k=k)
 
     #--------------------------------------------------------------------------------------------------------------------------
-    
+    def loadData(self, data:np.array) -> None:
+        mod_df = pd.DataFrame(columns=self.cols)
+        for i in range(len(data[0])):
+            mod_df[self.cols[i]] = data[:, i]
+
+        self.df = mod_df
+
+        # Sorts the values if regression, then creates a "class"
+        if self.regression:
+            self.df.sort_values('class', inplace=True)
+
+        # If there is an ID column, remove it
+        if self.id_col:
+            self.df.drop(self.id_col, axis=1, inplace=True)
+            self.cols.remove(self.id_col)
+            if self.cat_class:
+                self.categorical_cols.remove(self.id_col)
+
     def loadCSV(self, path_to_data: str) -> None:
         '''Opens a .DATA file and converts it to a cleaned Pandas DataFrame'''
         # Opens file and adds to dataframe 
@@ -64,7 +96,7 @@ class DataProcess():
                     self.df.loc[len(self.df)] = new_row
                 except ValueError as e:
                     print(f'{e}: Column names do not match. Did you use the correct names file?')
-                    return
+                    exit()
                 
                 all_data = file.readline()
         
@@ -84,7 +116,11 @@ class DataProcess():
 
         # Sorts the values if regression, then creates a "class"
         if self.regression:
+            columns = [x for x in self.categorical_cols if x != 'class']
+            self.df = pd.get_dummies(self.df, columns=columns, dtype=float)
+            self.df['class'] = pd.to_numeric(self.df['class'])
             self.df.sort_values('class', inplace=True)
+
 
         # Sends the class column to the end of the df, shuffles the data
         self.df['class'] = self.df.pop('class')
@@ -93,6 +129,11 @@ class DataProcess():
         # If there is an ID column, remove it
         if self.id_col:
             self.df.drop(self.id_col, axis=1, inplace=True)
+            self.cols.remove(self.id_col)
+
+        if self.regression:
+            return self.df.columns
+
     #--------------------------------------------------------------------------------------------------------------------------
 
     def _num_in_split(self, folds:int) -> list:
@@ -180,7 +221,7 @@ class DataProcess():
     def reg_k_fold_split(self, folds:int) -> list:
         cross_vals = [pd.DataFrame()] * folds
         for i in range(folds):
-            cross_vals[i] = [self.df[self.df.index % folds == i]]
+            cross_vals[i] = self.df[i::folds]
 
         return(cross_vals)
 
@@ -222,18 +263,25 @@ class DataProcess():
         df = pd.DataFrame()
         mod_df = self.df.copy()
         sample_size = [len(self.df) * perc]
-        
-        # Calculates the distribution of the data between classes
-        class_names = mod_df['class'].value_counts().keys()
-        distr = (mod_df['class'].value_counts().values)/len(mod_df)
-        class_totals = np.round(sample_size * distr)
-       
-        for i in range(len(class_totals)):
-            # Takes a random sample without replacement of each class which number of datapoints selected
-            # is the calculated number belonging to its class, then removes them from the df
-            sample = mod_df[mod_df['class'] == class_names[i]].sample(n=int(class_totals[i]), replace=False)
-            mod_df.drop(sample.index, axis=0,inplace=True)
-            df = pd.concat([df, sample], axis=0, ignore_index=True)
-        
-        self.df = mod_df
+        if self.regression:
+            count = round(sample_size[0])
+            step = round(len(self.df)/count)
+            df = mod_df[::step]
+            mod_df.drop(df.index, axis=0, inplace=True)
+            self.df = mod_df
+        else:
+            # Calculates the distribution of the data between classes
+            class_names = mod_df['class'].value_counts().keys()
+            distr = (mod_df['class'].value_counts().values)/len(mod_df)
+            class_totals = np.round(sample_size * distr)
+
+            for i in range(len(class_totals)):
+                # Takes a random sample without replacement of each class which number of datapoints selected
+                # is the calculated number belonging to its class, then removes them from the df
+                sample = mod_df[mod_df['class'] == class_names[i]].sample(n=int(class_totals[i]), replace=False)
+                mod_df.drop(sample.index, axis=0,inplace=True)
+                df = pd.concat([df, sample], axis=0, ignore_index=True)
+
+            mod_df.reset_index(inplace=True, drop=True)
+            self.df = mod_df
         return df
