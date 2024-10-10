@@ -83,13 +83,11 @@ class KNearestNeighbors():
         if self.reg:
             distances = np.array(dists)
             class_arr = np.array(classes, dtype=float)
-            gaussian = np.exp(-((distances ** 2) / (2 * (self.sigma ** 2))))
-            weighted_sum = np.dot(gaussian, class_arr)
-            coeffiecent = np.sum(gaussian)
-            if coeffiecent == 0:
-                return 0
+            gaussian = np.exp(-(distances ** 2)/(2 * (self.sigma ** 2)))
+            if np.sum(gaussian) == 0:
+                estimate = 0
             else:
-                estimate = weighted_sum/coeffiecent
+                estimate = np.sum(np.dot(gaussian, class_arr))/np.sum(gaussian)
             return estimate
         else:
             estimate = Counter(classes).most_common(1)[0][0]

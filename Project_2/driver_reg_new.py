@@ -104,7 +104,7 @@ def main():
     data = DataProcess(names=DATASET_NAMES, regression=True)
 
     # Loads the data set, creates the tuning set, then splits into ten folds
-    names = data.loadCSV(DATASET)
+    data.loadCSV(DATASET)
     tuning_set = data.create_tuning_set()
 
     tuning_set_classes = list(tuning_set['class'])
@@ -113,7 +113,7 @@ def main():
     # Creates dict to save performance metrics
     values = []
     k = 1
-    sigmas= [.000001, .00001, .0001, .01, .1, .5, 1, 10]
+    sigmas= [.0001, .0005, .001, .005,  .01, .05, .1, .5, 1, 5]
     # Iterates through, tests on the tuning set
     for i in folds:
         # Creates the training and test fold. Training fold is all folds exept the one on the index.
@@ -146,7 +146,7 @@ def main():
     best_k = None
     for i, val in enumerate(values):
         for j, num in enumerate(val):
-            if num <= lowest_loss or lowest_loss < 0:
+            if num < lowest_loss or lowest_loss < 0:
                 lowest_loss = num
                 best_sigma = (j+1)/10
                 best_k = (i+1)
