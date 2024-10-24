@@ -2,7 +2,7 @@ import numpy as np
 from layers import Layer
 
 class FeedForwardNN():
-    def __init__(self, inputs: np.array, hidden_layers: int, nodes: int, classification: bool, learning_rate: float, batch_size: int, num_of_classes: int=1):
+    def __init__(self, inputs: np.array, hidden_layers: int, nodes: int, classification: bool, learning_rate: float, batch_size: int, num_of_classes: int=1, class_names=None):
         self.inputs = inputs
         self.hidden_layers = hidden_layers
         self.nodes = nodes
@@ -10,6 +10,9 @@ class FeedForwardNN():
         self.num_of_classes = num_of_classes
         if self.num_of_classes != 1 and not self.classification:
             raise AttributeError('Regression should only have 1 output')
+        self.class_names = class_names
+        if self.class_names and not self.classification:
+            raise AttributeError('Regression should not have classes.')
         self.learning_rate = learning_rate
         self.batch_size = batch_size
 
@@ -50,8 +53,8 @@ class FeedForwardNN():
         # Counter used for mini-batches
         counter = 0
         # Saves the predicted values and the acutal values
-        actual_val = np.zeros(self.batch_size)
-        predicted_val = np.zeros(self.batch_size)
+        actual_val = np.array([None]*self.batch_size)
+        predicted_val = np.array([None]*self.batch_size)
         # Iterates through all inputs
         for i in self.inputs:
             actual_val[counter] = i[-1]
@@ -60,15 +63,24 @@ class FeedForwardNN():
             if counter == self.batch_size:
                 # TODO: Perform Back Prop Here!
                 counter = 0
+        print(actual_val, predicted_val)
 
     def get_prediction(self, point: np.array) -> float:
         '''Gets the predictions of the network at a specified point'''
         cur_layer = self.inputLayer
         inputs = point
-        # Iterates through the network, passing the previous layers output to the next lauer
+        # Iterates through the network, passing the previous layers output to the next layer
         while cur_layer:
             inputs = cur_layer.generate_output(inputs)
             cur_layer = cur_layer.next_layer
         # Returns the final prediciton
-        return inputs[0]
+        if self.classification:
+            index = np.where(inputs == max(inputs))
+            return self.class_names[index[0][0]]
+        else:
+            return inputs[0]
     
+data = np.ones((2,5))
+test = FeedForwardNN(data, 1, 4, False, 1, 1)
+test.test_list()
+test.train_data()
