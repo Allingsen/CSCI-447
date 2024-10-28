@@ -2,10 +2,12 @@ import numpy as np
 from layers import Layer
 
 class FeedForwardNN():
-    def __init__(self, inputs: np.array, hidden_layers: int, nodes: int, classification: bool, learning_rate: float, batch_size: int, num_of_classes: int=1, class_names=None):
+    def __init__(self, inputs: np.array, hidden_layers: int, nodes: list, classification: bool, learning_rate: float, batch_size: int, num_of_classes: int=1, class_names=None):
         self.inputs = inputs
         self.hidden_layers = hidden_layers
         self.nodes = nodes
+        if len(nodes) != self.hidden_layers:
+            raise ValueError('Layers and nodes do not match up!')
         self.classification = classification
         self.num_of_classes = num_of_classes
         if self.num_of_classes != 1 and not self.classification:
@@ -22,18 +24,20 @@ class FeedForwardNN():
 
     def create_layers(self):
         '''Creates the Entire Network'''
-        for _ in range(self.hidden_layers):
+        for i in range(self.hidden_layers):
             # Initlizes the Linked list
             cur_layer = self.inputLayer
             # Gets to the end
             while cur_layer.next_layer:
                 cur_layer = cur_layer.next_layer
             # Inserts the new layer at the end
-            new_layer = Layer(1, self.nodes, cur_layer, None)
+            new_layer = Layer(1, self.nodes[i], cur_layer, None)
             cur_layer.next_layer = new_layer
 
         # Adds the final output layer depending on type of network (Classification or Regression)
-        cur_layer = cur_layer.next_layer
+        cur_layer = self.inputLayer
+        while cur_layer.next_layer:
+            cur_layer = cur_layer.next_layer
         if self.classification:
             cur_layer.next_layer = Layer(3, self.num_of_classes, cur_layer, None)
         else:
@@ -79,8 +83,10 @@ class FeedForwardNN():
             return self.class_names[index[0][0]]
         else:
             return inputs[0]
-    
-data = np.ones((2,5))
-test = FeedForwardNN(data, 1, 4, False, 1, 1)
-test.test_list()
-test.train_data()
+
+#--------------------------------------------------------------------------------------------
+# Testing Data   
+#data = np.random.rand(2,5)  # Creates an array of 5 random features for testing (Last would be class)
+#test = FeedForwardNN(data, 0, [], False, 1, 1)
+#test.test_list()
+#test.train_data()
