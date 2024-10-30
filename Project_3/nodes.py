@@ -9,9 +9,14 @@ class Node(ABC):
     
     def manipulate_data(self, inputs:np.array) -> float:
         weighted_data = inputs * self.weights
+        sum = 0
+        for data in weighted_data:
+            sum += data
+        print("INPUTS: {}, WEIGHTS: {}, WEIGHTED_DATA: {}, SUM: {}".format(inputs, self.weights, weighted_data, sum))
         return np.sum(weighted_data)
 
     @abstractmethod
+    
     def activation_function(self) -> float:
         pass
 
