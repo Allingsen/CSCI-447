@@ -248,7 +248,7 @@ class FeedForwardNN():
 
                 #Need to take Hadamard product but dimensions don't align!!!
                 print(logistic_deriv.shape)
-                cur_error = np.dot(weight_matrix_forward.T, temp_arr) * logistic_deriv
+                cur_error = (np.dot(weight_matrix_forward.T, temp_arr)).T * logistic_deriv
                 error_temp = cur_error
 
                 #At this point we have delta^l and the old weights, need A^(l-1) transpose
@@ -265,9 +265,13 @@ class FeedForwardNN():
                     neuron.weights = update_to[i]
                     i += 1
                 
+                for neuron in cur_layer.prev_layer.nodes:
+                   print(neuron.weights) 
+                   i += 1
+
+
                 cur_layer = cur_layer.prev_layer
-   
-        
+                    
 #--------------------------------------------------------------------------------------------
 # Testing Data   
 #data = np.random.rand(2,5)  # Creates an array of 5 random features for testing (Last would be class)
