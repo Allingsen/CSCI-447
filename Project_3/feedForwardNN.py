@@ -229,10 +229,42 @@ class FeedForwardNN():
                     i += 1
                 print("WEIGHT MATRIX BACKWARD:", weight_matrix_backward)
 
-                error_input = weight_matrix_backward @ prev_activation
+                #A^(l-1)
+                pre_activation = prev_activation @ weight_matrix_backward.T
+                print("PRE_ACTIVATION:", pre_activation)
 
-                #CALCULATE ERROR MATRIX NEXT
+                #A^(l)
+                cur_activation = 1/(1 + np.exp(-pre_activation))
+                print("CURRENT ACTIVATION:", cur_activation)
 
+                #derivative of activation function...
+                logistic_deriv = cur_activation * (1 - cur_activation)
+                print("LOGISTIC DERIVATIVE:", logistic_deriv)
+
+                #Get delta^l
+                print("ERROR TEMP:", error_temp)
+                temp_arr = np.zeros((1, 3))
+                temp_arr[0] = np.array(error_temp)
+
+                #Need to take Hadamard product but dimensions don't align!!!
+                print(logistic_deriv.shape)
+                cur_error = np.dot(weight_matrix_forward.T, temp_arr) * logistic_deriv
+                error_temp = cur_error
+
+                #At this point we have delta^l and the old weights, need A^(l-1) transpose
+                pre_activation_transpose = pre_activation.T
+
+                #Update the weights
+                rows1, columns1 = pre_activation_transpose.shape
+                rows2, columns2 = cur_error.shape
+                print(f"SHAPE 1: {rows1}x{columns1}")
+                print(f"SHAPE 2: {rows2}x{columns2}")
+                update_to = weight_matrix_backward - (self.learning_rate * (1/self.batch_size) * (pre_activation_transpose @ cur_error))
+                i = 0
+                for neuron in cur_layer.prev_layer.nodes:
+                    neuron.weights = update_to[i]
+                    i += 1
+                
                 cur_layer = cur_layer.prev_layer
    
         
