@@ -48,7 +48,8 @@ class Layer():
         # If it is the input layer, pass the original values
         if self.version == 0:
             out = inputs
-            if(self.activation_row > self.batch_size):
+            print(self.activation_row)
+            if(self.activation_row >= self.batch_size):
                 self.activation_row = 0
             self.activation_matrix[self.activation_row] = out
             self.activation_row += 1
@@ -59,7 +60,7 @@ class Layer():
             for i, val in enumerate(self.nodes):
                 print(f'weights: {val.weights}')
                 out[i] = val.activation_function(inputs)
-            if(self.activation_row > self.batch_size):
+            if(self.activation_row >= self.batch_size):
                 self.activation_row = 0
             self.activation_matrix[self.activation_row] = out
             self.activation_row += 1
