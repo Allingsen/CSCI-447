@@ -9,6 +9,7 @@ DATASET_CALLED = 'soybean-two'
 DATASET = 'Project_2/datasets/soybean-small.data'
 DATASET_NAMES = [*range(35)] + ['class']
 DATASET_CLASS = False
+
 def plot_loss_functions(zero_layer: list, one_layer: list, two_layer:list) -> None:
     '''Creates a figure with two subplots showing our results'''
     # Sets up plot for displaying 
