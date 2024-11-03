@@ -73,6 +73,11 @@ class FeedForwardNN():
 
     def train_data(self):
         '''Feeds data through the network, tuning weights using minibatch backprop'''
+        print("ENTERED")
+        cur_layer = self.inputLayer
+        while(cur_layer.next_layer != None):
+            cur_layer = cur_layer.next_layer
+        output_layer = cur_layer
         # Counter used for mini-batches
         counter = 0
         # Saves the predicted values and the acutal values
@@ -82,15 +87,21 @@ class FeedForwardNN():
         for i in self.inputs:
             actual_val[counter] = i[-1]
             predicted_val[counter] = self.get_prediction(i[:-1])
+            print("ACTUAL VALS:", actual_val)
+            print("PREDICTED VALS:", predicted_val)
+            counter += 1
+            print(counter)
             # If the minibatch has been iterated through, perform backprop
             if counter == self.batch_size:
-                #Clear the probabilities for the next mini-batch
-                probabilities_list.clear()
+                probabilities_list = output_layer.get_probabilities()
+                print("PROBABILITIES LIST:", probabilities_list)
                 error_signal = self.error_signal(predicted_val, actual_val, probabilities_list)
                 # TODO: Perform Back Prop Here!
-                self.backpropagate(error_signal)
+                self.backpropagate(error_signal, predicted_val, actual_val, probabilities_list)
+                probabilities_list.clear()
+                output_layer.probabilities.clear()
                 counter = 0
-
+            
     def get_prediction(self, point: np.array) -> float:
         '''Gets the predictions of the network at a specified point'''
         cur_layer = self.inputLayer
@@ -151,126 +162,56 @@ class FeedForwardNN():
         else:
             error_vector = []
             for i in range(len(predicted_values)):
-                error_vector.append((-2/self.batch_size) * (predicted_values[i] - actual_values[i]))
+                error_vector.append(predicted_values[i] - actual_values[i])
             return(error_vector)
     
-    def backpropagate(self, error_signal, predicted_values, actual_values, inputs, probabilities_list):
-    
-        #If regression...
-        if(not self.classification):
-           
-           #This part will go away. Forward propagates examples for testing purposes
-            cur_layer = self.inputLayer
-            while(cur_layer != None):
-               print(cur_layer.activation_matrix)
-               cur_layer = cur_layer.next_layer
-            print(inputs[0, :4])
-            self.get_prediction(inputs[0, :4])
-            cur_layer = self.inputLayer
-            while(cur_layer != None):
-               print(cur_layer.activation_matrix)
-               cur_layer = cur_layer.next_layer
-            self.get_prediction(inputs[1, :4])
-            cur_layer = self.inputLayer
-            while(cur_layer != None):
-               print(cur_layer.activation_matrix)
-               cur_layer = cur_layer.next_layer
-            self.get_prediction(inputs[2, :4])
-            cur_layer = self.inputLayer
-            while(cur_layer != None):
-               if(cur_layer.next_layer == None):
-                   output_activation = cur_layer.activation_matrix
-               print(cur_layer.activation_matrix)
-               cur_layer = cur_layer.next_layer
-            
-            error_temp = self.error_signal(output_activation.flatten().tolist(), actual_values, probabilities_list)
+    def backpropagate(self, error_signal, predicted_values, actual_values, probabilities_list):
+        
+        #Save output layer to a variable
+        cur_layer = self.inputLayer
+        while(cur_layer.next_layer != None):
+            cur_layer = cur_layer.next_layer
+        output_layer = cur_layer
 
-           #Update weights running into output neuron
-            cur_layer = self.inputLayer
-            while(cur_layer.next_layer != None):
-               cur_layer = cur_layer.next_layer
-            
-            last_hidden = cur_layer.prev_layer
-            activation_matrix = last_hidden.activation_matrix
-            activation_transpose = activation_matrix.T
-            print("ACTIVATION TRANSPOSE:", activation_transpose)
-            #REPLACE WITH error_signal WHEN DONE TESTING
-            print("ERROR:", error_temp)
-            weight_updates_prelim = np.dot(activation_transpose, error_temp)
-            print("WEIGHT UPDATES:", weight_updates_prelim)
-            weight_updates = self.learning_rate * weight_updates_prelim
-            print("WEIGHT GRADIENTS:", weight_updates)
-            output_neuron = cur_layer
-
-            #Update Weights feeding into output neuron
-            output_neuron.nodes[0].weights = output_neuron.nodes[0].weights - weight_updates
-            print("NEW WEIGHTS:", output_neuron.nodes[0].weights)
-
-            #Update the rest of the weights
-            while(cur_layer.prev_layer != self.inputLayer):
+        #Backprop over all layers
+        first = True
+        while(cur_layer != self.inputLayer):
+            if(first):
+                print(error_signal)
+                error_signal_arr = np.array(error_signal)
+                if(self.classification):
+                    if(self.num_of_classes != 2):
+                        error_signal_arr = np.reshape(error_signal_arr, (self.batch_size, self.num_of_classes))
+                    else:
+                        error_signal_arr = np.reshape(error_signal_arr, (self.batch_size, 1))
+                else:
+                    error_signal_arr = np.reshape(error_signal_arr, (self.batch_size, 1))
                 
-                #Obtain weight matrix for weights connecting this layer to the next layer
-                weight_matrix_forward = np.zeros((cur_layer.num_nodes, cur_layer.prev_layer.num_nodes))
-                i = 0
-                for neuron in cur_layer.nodes:
-                    weight_matrix_forward[i] = neuron.weights
-                    i += 1
-                print("WEIGHT MATRIX FORWARD:", weight_matrix_forward)
-                prev_activation = cur_layer.prev_layer.prev_layer.activation_matrix
+                first = False
 
-                #Obtain previous layer's activation
-                print("PREV ACTIVATION:", prev_activation)
+            prev_activation = cur_layer.prev_layer.activation_matrix
+            print(error_signal_arr.shape)
+            row2, column2 = prev_activation.shape
+            print(row2, column2)
+            weight_gradient = (1/self.batch_size) * (error_signal_arr.T @ prev_activation)
+            print("WEIGHT GRADIENT:", weight_gradient)
+            print("WEIGHT MATRIX:", cur_layer.weight_matrix)
 
-                #Obtain weight matrix for weights connecting the previous layer to this layer
-                weight_matrix_backward = np.zeros((cur_layer.prev_layer.num_nodes, cur_layer.prev_layer.prev_layer.num_nodes))
-                i = 0
-                for neuron in cur_layer.prev_layer.nodes:
-                    weight_matrix_backward[i] = neuron.weights
-                    i += 1
-                print("WEIGHT MATRIX BACKWARD:", weight_matrix_backward)
+            #UPDATE WEIGHTS
+            cur_layer.weight_matrix = cur_layer.weight_matrix - (self.learning_rate * weight_gradient)
+            print("NEW WEIGHTS:", cur_layer.weight_matrix)
 
-                #A^(l-1)
-                pre_activation = prev_activation @ weight_matrix_backward.T
-                print("PRE_ACTIVATION:", pre_activation)
+            #GET NEW ERROR TERM
+            if(cur_layer.prev_layer != self.inputLayer):
+                #GET f'(Z^l), i.e., (A^l(1 - A^l))
+                deriv = prev_activation * (1 - prev_activation)
 
-                #A^(l)
-                cur_activation = 1/(1 + np.exp(-pre_activation))
-                print("CURRENT ACTIVATION:", cur_activation)
+                #UPDATE ERROR TERM
+                error_signal_arr = (error_signal_arr @ (cur_layer.weight_matrix)) * deriv
+                print("NEW ERROR:", error_signal_arr)
 
-                #derivative of activation function...
-                logistic_deriv = cur_activation * (1 - cur_activation)
-                print("LOGISTIC DERIVATIVE:", logistic_deriv)
+            cur_layer = cur_layer.prev_layer
 
-                #Get delta^l
-                print("ERROR TEMP:", error_temp)
-                temp_arr = np.zeros((1, 3))
-                temp_arr[0] = np.array(error_temp)
-
-                #Need to take Hadamard product but dimensions don't align!!!
-                print(logistic_deriv.shape)
-                cur_error = (np.dot(weight_matrix_forward.T, temp_arr)).T * logistic_deriv
-                error_temp = cur_error
-
-                #At this point we have delta^l and the old weights, need A^(l-1) transpose
-                pre_activation_transpose = pre_activation.T
-
-                #Update the weights
-                rows1, columns1 = pre_activation_transpose.shape
-                rows2, columns2 = cur_error.shape
-                print(f"SHAPE 1: {rows1}x{columns1}")
-                print(f"SHAPE 2: {rows2}x{columns2}")
-                update_to = weight_matrix_backward - (self.learning_rate * (1/self.batch_size) * (pre_activation_transpose @ cur_error))
-                i = 0
-                for neuron in cur_layer.prev_layer.nodes:
-                    neuron.weights = update_to[i]
-                    i += 1
-                
-                for neuron in cur_layer.prev_layer.nodes:
-                   print(neuron.weights) 
-                   i += 1
-
-
-                cur_layer = cur_layer.prev_layer
                     
 #--------------------------------------------------------------------------------------------
 # Testing Data   
