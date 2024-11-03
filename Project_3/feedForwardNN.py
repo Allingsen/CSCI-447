@@ -62,6 +62,9 @@ class FeedForwardNN():
         else:
             cur_layer.next_layer = Layer(2, 1, self.batch_size, cur_layer, None)
 
+    def new_inputs(self, inputs:np.array):
+        self.inputs = inputs
+
     def test_list(self):
         '''Prints Network Information, only used for manual Checking'''
         print('-----Data-----\n', self.inputs)
@@ -101,7 +104,18 @@ class FeedForwardNN():
                 probabilities_list.clear()
                 output_layer.probabilities.clear()
                 counter = 0
-            
+
+    def test_data(self, inputs: np.array) -> tuple:
+        actual_val = np.array([None]*len(inputs))
+        predicted_val = np.array([None]*len(inputs))
+        for i, val in enumerate(self.inputs):
+            actual_val[i] = val[-1]
+            predicted_val[i] = self.get_prediction(val[:-1])
+            print("ACTUAL VALS:", actual_val)
+            print("PREDICTED VALS:", predicted_val)
+
+        return actual_val, predicted_val                     
+
     def get_prediction(self, point: np.array) -> float:
         '''Gets the predictions of the network at a specified point'''
         cur_layer = self.inputLayer

@@ -201,8 +201,40 @@ def main():
                                    learning_rate=best_params_two['learning_rate'], batch_size=best_params_two['batch_size'],
                                    class_names=DATASET_NAMES)
         no_hidden.train_data()
+        no_weights = no_hidden.get_weights()
         one_hidden.train_data()
+        one_weights = one_hidden.get_weights()
         two_hidden.train_data()
+        two_weights = two_hidden.get_weights()
+
+        np.random.shuffle(training_df)
+        no_hidden.new_inputs(training_df)
+        no_hidden.train_data()
+        new_no_weights = no_hidden.get_weights()
+        one_hidden.new_inputs(training_df)
+        one_hidden.train_data()
+        new_one_weights = one_hidden.get_weights()
+        two_hidden.new_inputs(training_df)
+        two_hidden.train_data()
+        new_two_weights = two_hidden.get_weights()
+
+        while not np.all(np.abs(no_weights - new_no_weights) / no_weights <= 0.05):
+            np.random.shuffle(training_df)
+            no_hidden.new_inputs(training_df)
+            no_hidden.train_data()
+            new_no_weights = no_hidden.get_weights()
+
+        while not np.all(np.abs(one_weights - new_one_weights) / one_weights <= 0.05):
+            np.random.shuffle(training_df)
+            one_hidden.new_inputs(training_df)
+            one_hidden.train_data()
+            new_one_weights = one_hidden.get_weights()
+
+        while not np.all(np.abs(two_weights - new_two_weights) / two_weights <= 0.05):
+            np.random.shuffle(training_df)
+            two_hidden.new_inputs(training_df)
+            two_hidden.train_data()
+            new_two_weights = two_hidden.get_weights()
 
         actual_zero, predicted_zero = no_hidden.test_data(i)
         actual_one, predicted_one = one_hidden.test_data(i)
