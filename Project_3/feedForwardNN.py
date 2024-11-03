@@ -97,7 +97,7 @@ class FeedForwardNN():
                 print("PROBABILITIES LIST:", probabilities_list)
                 error_signal = self.error_signal(predicted_val, actual_val, probabilities_list)
                 # TODO: Perform Back Prop Here!
-                self.backpropagate(error_signal, predicted_val, actual_val, probabilities_list)
+                self.backpropagate(error_signal)
                 probabilities_list.clear()
                 output_layer.probabilities.clear()
                 counter = 0
@@ -166,15 +166,14 @@ class FeedForwardNN():
                 error_vector.append(predicted_values[i] - actual_values[i])
             return(error_vector)
     
-    def backpropagate(self, error_signal, predicted_values, actual_values, probabilities_list):
+    def backpropagate(self, error_signal):
         
         #Save output layer to a variable
         cur_layer = self.inputLayer
         while(cur_layer.next_layer != None):
             cur_layer = cur_layer.next_layer
-        output_layer = cur_layer
 
-        #Backprop over all layers
+        #Backpropagate over all layers
         first = True
         while(cur_layer != self.inputLayer):
             if(first):
