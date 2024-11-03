@@ -11,8 +11,20 @@ class Layer():
         self.next_layer = next_layer
         self.activation_matrix = np.zeros((batch_size, num_nodes))
         self.activation_row = 0
+        self.probabilities = []
+        self.weight_matrix = None 
 
         self.create_nodes()
+
+        if(self.version != 0):
+            print("ENTERED")
+            print("VERSION:", self.version)
+            self.weight_matrix = np.zeros((len(self.nodes), len(self.prev_layer.nodes)))
+            i = 0
+            for neuron in self.nodes:
+                self.weight_matrix[i] = neuron.weights
+                i += 1
+            print(self.weight_matrix)
 
     def create_nodes(self):
         '''Creates the Nodes in the layer, depending on type of layer'''
@@ -55,9 +67,16 @@ class Layer():
             # Implements softmax, done on the layer level for ease
             if self.version == 3:
                 out = np.exp(out) / np.sum(np.exp(out))
+                self.probabilities.append(out)
 
         print(f'Layer output: {out}')
         return out
     
     def get_activation_matrix(self):
         return(self.activation_matrix)
+    
+    def get_probabilities(self):
+        return(self.probabilities)
+    
+    def get_weight_matrix(self):
+        return(self.weight_matrix)
