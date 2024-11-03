@@ -137,7 +137,7 @@ class FeedForwardNN():
                     else:
                         pos_or_neg = [0,1]
                     
-                    to_enter = probabilities_list[i][1] - pos_or_neg
+                    to_enter = probabilities_list[i] - pos_or_neg
                     error_matrix.append(to_enter)
                 return(error_matrix)
 
@@ -146,16 +146,15 @@ class FeedForwardNN():
                 error_matrix = []
 
                 for i in range(len(predicted_values)):
-                    error_vector = []
-                    for c in range(self.num_of_classes):
-                        y_true = None
+                    y_true = []
+                    for c in range(self.num_of_classes):                     
                         if(actual_values[i] == int(self.class_names[c])):
-                            y_true = 1
+                            y_true.append(1)                         
                         else:
-                            y_true = 0
-
-                        error_vector.append(probabilities_list[i][c] - y_true)
-                    error_matrix.append(error_vector)
+                            y_true.append(0)
+                    
+                    print(f"y_true: {y_true}")                  
+                    error_matrix.append(probabilities_list[i] - y_true)
 
                 return(error_matrix)
 
@@ -209,11 +208,3 @@ class FeedForwardNN():
                 print("NEW ERROR:", error_signal_arr)
 
             cur_layer = cur_layer.prev_layer
-
-                    
-#--------------------------------------------------------------------------------------------
-# Testing Data   
-#data = np.random.rand(2,5)  # Creates an array of 5 random features for testing (Last would be class)
-#test = FeedForwardNN(data, 0, [], False, 1, 1)
-#test.test_list()
-#test.train_data()
