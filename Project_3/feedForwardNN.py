@@ -126,19 +126,20 @@ class FeedForwardNN():
 
             #Binary Cross-Entropy Loss
             if(self.num_of_classes == 2):
-                error_vector = []
+                error_matrix = []
 
                 for i in range(len(predicted_values)):
 
                     #Negative class will be class_names[0], positive class will be class_names[1]
                     pos_or_neg = None
                     if(actual_values[i] == int(self.class_names[0])):
-                        pos_or_neg = 0
+                        pos_or_neg = [1,0]
                     else:
-                        pos_or_neg = 1
+                        pos_or_neg = [0,1]
                     
-                    error_vector.append(probabilities_list[i][1] - actual_values[i])
-                return(error_vector)
+                    to_enter = probabilities_list[i][1] - pos_or_neg
+                    error_matrix.append(to_enter)
+                return(error_matrix)
 
             #Categorical Cross-Entropy Loss
             else:
@@ -180,10 +181,7 @@ class FeedForwardNN():
                 print(error_signal)
                 error_signal_arr = np.array(error_signal)
                 if(self.classification):
-                    if(self.num_of_classes != 2):
-                        error_signal_arr = np.reshape(error_signal_arr, (self.batch_size, self.num_of_classes))
-                    else:
-                        error_signal_arr = np.reshape(error_signal_arr, (self.batch_size, 1))
+                    error_signal_arr = np.reshape(error_signal_arr, (self.batch_size, self.num_of_classes))
                 else:
                     error_signal_arr = np.reshape(error_signal_arr, (self.batch_size, 1))
                 
@@ -207,6 +205,7 @@ class FeedForwardNN():
                 deriv = prev_activation * (1 - prev_activation)
 
                 #UPDATE ERROR TERM
+                print(f"ERROR SIGNAL: {error_signal_arr}\nWeight Matrix: {cur_layer.weight_matrix}\n deriv: {deriv}")
                 error_signal_arr = (error_signal_arr @ (cur_layer.weight_matrix)) * deriv
                 print("NEW ERROR:", error_signal_arr)
 
