@@ -64,35 +64,20 @@ class DataProcess():
         return random.choices(values, weights, k=k)
 
     #--------------------------------------------------------------------------------------------------------------------------
-    def loadData(self, data:np.array) -> None:
-        mod_df = pd.DataFrame(columns=self.cols)
-        for i in range(len(data[0])):
-            mod_df[self.cols[i]] = data[:, i]
-
-        self.df = mod_df
-
-        # Sorts the values if regression, then creates a "class"
-        if self.regression:
-            self.df.sort_values('class', inplace=True)
-
-        # If there is an ID column, remove it
-        if self.id_col:
-            self.df.drop(self.id_col, axis=1, inplace=True)
-            self.cols.remove(self.id_col)
-            if self.cat_class:
-                self.categorical_cols.remove(self.id_col)
 
     def min_max_normalize(self):
         '''Normalizes numerical columns'''
         for i in self.cols:
-            if i in self.categorical_cols or i == 'class':
+            if i in self.categorical_cols or (self.cat_class and i == 'class'):
                 continue
             else:
                 col = self.df[i].to_numpy()
                 minimum = min(col)
                 maximum = max(col)
                 col = col - minimum
-                col = col / (maximum-minimum)
+                divisor = maximum-minimum
+                if divisor != 0:
+                    col = col / divisor
                 self.df[i] = col
 
     def loadCSV(self, path_to_data: str) -> None:
@@ -127,10 +112,20 @@ class DataProcess():
                 elif self.df[i].isnull().any():
                     self.df[i].fillna(self.df[i].mean(skipna=True), inplace=True)
 
+        
+        # If there is an ID column, remove it
+        
+        if self.id_col:
+            self.df.drop(self.id_col, axis=1, inplace=True)
+            self.cols.remove(self.id_col)
+        
+        #self.df.drop('model', axis=1, inplace=True)
+        columns = [x for x in self.categorical_cols if x != 'class']
+        
+        self.df = pd.get_dummies(self.df, columns=columns, dtype=float)
+
         # Sorts the values if regression, then creates a "class"
         if self.regression:
-            columns = [x for x in self.categorical_cols if x != 'class']
-            self.df = pd.get_dummies(self.df, columns=columns, dtype=float)
             self.df['class'] = pd.to_numeric(self.df['class'])
             self.df.sort_values('class', inplace=True)
 
@@ -138,12 +133,9 @@ class DataProcess():
         self.df['class'] = self.df.pop('class')
         self.df = self.df.sample(frac=1).reset_index(drop=True)
 
-        # If there is an ID column, remove it
-        if self.id_col:
-            self.df.drop(self.id_col, axis=1, inplace=True)
-            self.cols.remove(self.id_col)
-        
         self.min_max_normalize()
+
+        self.df = self.df.drop([0,1])
 
     #--------------------------------------------------------------------------------------------------------------------------
 

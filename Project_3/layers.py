@@ -17,14 +17,13 @@ class Layer():
         self.create_nodes()
 
         if(self.version != 0):
-            print("ENTERED")
-            print("VERSION:", self.version)
+            #print("ENTERED")
+            #print("VERSION:", self.version)
             self.weight_matrix = np.zeros((len(self.nodes), len(self.prev_layer.nodes)))
             i = 0
             for neuron in self.nodes:
                 self.weight_matrix[i] = neuron.weights
                 i += 1
-            print(self.weight_matrix)
 
     def create_nodes(self):
         '''Creates the Nodes in the layer, depending on type of layer'''
@@ -48,7 +47,7 @@ class Layer():
         # If it is the input layer, pass the original values
         if self.version == 0:
             out = inputs
-            print(self.activation_row)
+            #print(self.activation_row)
             if(self.activation_row >= self.batch_size):
                 self.activation_row = 0
             self.activation_matrix[self.activation_row] = out
@@ -58,7 +57,7 @@ class Layer():
             # Get the values of all output functions 
             out = np.zeros(self.num_nodes)
             for i, val in enumerate(self.nodes):
-                print(f'weights: {val.weights}')
+                #print(f'weights: {val.weights}')
                 out[i] = val.activation_function(inputs)
             if(self.activation_row >= self.batch_size):
                 self.activation_row = 0
@@ -70,7 +69,7 @@ class Layer():
                 out = np.exp(out) / np.sum(np.exp(out))
                 self.probabilities.append(out)
 
-        print(f'Layer output: {out}')
+        #print(f'Layer output: {out}')
         return out
     
     def get_activation_matrix(self):

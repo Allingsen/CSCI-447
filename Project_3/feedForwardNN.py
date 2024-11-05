@@ -76,7 +76,7 @@ class FeedForwardNN():
 
     def train_data(self):
         '''Feeds data through the network, tuning weights using minibatch backprop'''
-        print("ENTERED")
+        #print("ENTERED")
         cur_layer = self.inputLayer
         while(cur_layer.next_layer != None):
             cur_layer = cur_layer.next_layer
@@ -86,18 +86,23 @@ class FeedForwardNN():
         # Saves the predicted values and the acutal values
         actual_val = np.array([None]*self.batch_size)
         predicted_val = np.array([None]*self.batch_size)
+        all_actual = np.array([None]*len(self.inputs))
+        all_pred = np.array([None]*len(self.inputs))
         # Iterates through all inputs
-        for i in self.inputs:
+        for no,i in enumerate(self.inputs):
             actual_val[counter] = i[-1]
             predicted_val[counter] = self.get_prediction(i[:-1])
-            print("ACTUAL VALS:", actual_val)
-            print("PREDICTED VALS:", predicted_val)
+            all_actual[no] = i[-1]
+            all_pred[no] = predicted_val[counter]
+            #print("ACTUAL VALS:", actual_val)
+            #print("PREDICTED VALS:", predicted_val)
             counter += 1
-            print(counter)
+            #print(counter)
             # If the minibatch has been iterated through, perform backprop
             if counter == self.batch_size:
+                
                 probabilities_list = output_layer.get_probabilities()
-                print("PROBABILITIES LIST:", probabilities_list)
+                #print("PROBABILITIES LIST:", probabilities_list)
                 error_signal = self.error_signal(predicted_val, actual_val, probabilities_list)
                 # TODO: Perform Back Prop Here!
                 self.backpropagate(error_signal)
@@ -105,14 +110,16 @@ class FeedForwardNN():
                 output_layer.probabilities.clear()
                 counter = 0
 
-    def test_data(self, inputs: np.array) -> tuple:
-        actual_val = np.array([None]*len(inputs))
-        predicted_val = np.array([None]*len(inputs))
-        for i, val in enumerate(self.inputs):
+        return all_actual, all_pred
+
+    def test_data(self, examples: np.array) -> tuple:
+        actual_val = np.array([None]*len(examples))
+        predicted_val = np.array([None]*len(examples))
+        for i, val in enumerate(examples):
             actual_val[i] = val[-1]
             predicted_val[i] = self.get_prediction(val[:-1])
-            print("ACTUAL VALS:", actual_val)
-            print("PREDICTED VALS:", predicted_val)
+        #print("ACTUAL VALS:", actual_val)
+        #print("PREDICTED VALS:", predicted_val)
 
         return actual_val, predicted_val                     
 
@@ -146,7 +153,7 @@ class FeedForwardNN():
 
                     #Negative class will be class_names[0], positive class will be class_names[1]
                     pos_or_neg = None
-                    if(actual_values[i] == int(self.class_names[0])):
+                    if(actual_values[i] == (self.class_names[0])):
                         pos_or_neg = [1,0]
                     else:
                         pos_or_neg = [0,1]
@@ -162,12 +169,12 @@ class FeedForwardNN():
                 for i in range(len(predicted_values)):
                     y_true = []
                     for c in range(self.num_of_classes):                     
-                        if(actual_values[i] == int(self.class_names[c])):
+                        if(actual_values[i] == (self.class_names[c])):
                             y_true.append(1)                         
                         else:
                             y_true.append(0)
                     
-                    print(f"y_true: {y_true}")                  
+                    #print(f"y_true: {y_true}")                  
                     error_matrix.append(probabilities_list[i] - y_true)
 
                 return(error_matrix)
@@ -190,7 +197,7 @@ class FeedForwardNN():
         first = True
         while(cur_layer != self.inputLayer):
             if(first):
-                print(error_signal)
+                #print(error_signal)
                 error_signal_arr = np.array(error_signal)
                 if(self.classification):
                     error_signal_arr = np.reshape(error_signal_arr, (self.batch_size, self.num_of_classes))
@@ -200,16 +207,16 @@ class FeedForwardNN():
                 first = False
 
             prev_activation = cur_layer.prev_layer.activation_matrix
-            print(error_signal_arr.shape)
+            #print(error_signal_arr.shape)
             row2, column2 = prev_activation.shape
-            print(row2, column2)
+            #print(row2, column2)
             weight_gradient = (1/self.batch_size) * (error_signal_arr.T @ prev_activation)
-            print("WEIGHT GRADIENT:", weight_gradient)
-            print("WEIGHT MATRIX:", cur_layer.weight_matrix)
+            #print("WEIGHT GRADIENT:", weight_gradient)
+            #print("WEIGHT MATRIX:", cur_layer.weight_matrix)
 
             #UPDATE WEIGHTS
             cur_layer.weight_matrix = cur_layer.weight_matrix - (self.learning_rate * weight_gradient)
-            print("NEW WEIGHTS:", cur_layer.weight_matrix)
+            #print("NEW WEIGHTS:", cur_layer.weight_matrix)
 
             #GET NEW ERROR TERM
             if(cur_layer.prev_layer != self.inputLayer):
@@ -217,9 +224,9 @@ class FeedForwardNN():
                 deriv = prev_activation * (1 - prev_activation)
 
                 #UPDATE ERROR TERM
-                print(f"ERROR SIGNAL: {error_signal_arr}\nWeight Matrix: {cur_layer.weight_matrix}\n deriv: {deriv}")
+                #print(f"ERROR SIGNAL: {error_signal_arr}\nWeight Matrix: {cur_layer.weight_matrix}\n deriv: {deriv}")
                 error_signal_arr = (error_signal_arr @ (cur_layer.weight_matrix)) * deriv
-                print("NEW ERROR:", error_signal_arr)
+                #print("NEW ERROR:", error_signal_arr)
 
             cur_layer = cur_layer.prev_layer
 

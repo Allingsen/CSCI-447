@@ -5,10 +5,12 @@ import random
 from dataProcess import DataProcess
 from feedForwardNN import FeedForwardNN
  
-DATASET_CALLED = 'soybean-two'
-DATASET = 'Project_2/datasets/soybean-small.data'
-DATASET_NAMES = [*range(35)] + ['class']
-DATASET_CLASS = False
+DATASET_CALLED = 'breast-cancer'
+DATASET = 'Project_3/datasets/breast-cancer-wisconsin.data'
+DATASET_NAMES = ['id', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'class']
+CLASS_NAMES = ['2', '4']
+NUM_CLASSES = len(CLASS_NAMES)
+DATASET_CLASS = True
 
 def plot_loss_functions(zero_layer: list, one_layer: list, two_layer:list) -> None:
     '''Creates a figure with two subplots showing our results'''
@@ -85,7 +87,7 @@ def plot_loss_functions(zero_layer: list, one_layer: list, two_layer:list) -> No
 
     fig.legend(handles, labels.keys(), loc='center left')
 
-    plt.savefig('Project_2/figures/' +DATASET_CALLED+'_fig.png')
+    plt.savefig('Project_3/figures/' +DATASET_CALLED+'_fig.png')
 
 def loss_functions(estimates:np.array, actual:np.array):
         all_recall = []
@@ -118,17 +120,18 @@ def loss_functions(estimates:np.array, actual:np.array):
 
 def main():
     # Creates a data process instance with accurate information from the .NAMES file
-    data = DataProcess(names=DATASET_NAMES,cat_class=True)
+    data = DataProcess(names=DATASET_NAMES, cat_class=True, id_col='id', missing_val='?')
 
     # Loads the data set, creates the tuning set, then splits into ten folds
     data.loadCSV(DATASET)
+    
     tuning_set = data.create_tuning_set()
     folds = data.k_fold_split(10)
-
+    
     # Iterates through, tests on the tuning set
-    learning_rates = []
-    batch_sizes = []
-    no_nodes = []
+    learning_rates = [0.001, 0.005, 0.01, 0.05, 0.1]
+    batch_sizes = [2, 349]
+    no_nodes = [*range(1,9)]
 
     best_params_no = {}
     best_score_no = 0
@@ -146,43 +149,96 @@ def main():
         training_df = (pd.concat([x for x in folds if not (x.equals(i))], axis=0, ignore_index=True)).to_numpy()
 
         no_hidden = FeedForwardNN(inputs= training_df, hidden_layers= 0, nodes=[], classification=DATASET_CLASS,
-                                   learning_rate=learning_rate, batch_size=batch_size,
-                                   class_names=DATASET_NAMES)
+                                   learning_rate=learning_rate, batch_size=batch_size, 
+                                   num_of_classes=NUM_CLASSES, class_names=CLASS_NAMES)
         one_hidden = FeedForwardNN(inputs= training_df, hidden_layers= 1, nodes=[num_nodes[0]], classification=DATASET_CLASS,
                                    learning_rate=learning_rate, batch_size=batch_size,
-                                   class_names=DATASET_NAMES)
+                                   num_of_classes=NUM_CLASSES, class_names=CLASS_NAMES)
         two_hidden = FeedForwardNN(inputs= training_df, hidden_layers= 2, nodes=[num_nodes[0], num_nodes[1]], classification=DATASET_CLASS,
-                                   learning_rate=learning_rate, batch_size=batch_size,
-                                   class_names=DATASET_NAMES)
+                                   learning_rate=learning_rate, batch_size=batch_size, 
+                                   num_of_classes=NUM_CLASSES,class_names=CLASS_NAMES)
         no_hidden.train_data()
+        no_weights = no_hidden.get_weights()
         one_hidden.train_data()
+        one_weights = one_hidden.get_weights()
         two_hidden.train_data()
+        two_weights = two_hidden.get_weights()
 
-        actual_zero, predicted_zero = no_hidden.test_data(tuning_set)
-        actual_one, predicted_one = one_hidden.test_data(tuning_set)
-        actual_two, predicted_two = two_hidden.test_data(tuning_set)
+        np.random.shuffle(training_df)
+        no_hidden.new_inputs(training_df)
+        no_hidden.train_data()
+        new_no_weights = no_hidden.get_weights()
+        one_hidden.new_inputs(training_df)
+        one_hidden.train_data()
+        new_one_weights = one_hidden.get_weights()
+        two_hidden.new_inputs(training_df)
+        two_hidden.train_data()
+        new_two_weights = two_hidden.get_weights()
+        
 
-        no_loss = loss_functions(predicted_zero, actual_zero)
-        one_loss = loss_functions(predicted_one, actual_one)
-        two_loss = loss_functions(predicted_two, actual_two)
+        counter = 0
+        while not np.all(np.abs(no_weights - new_no_weights) / no_weights <= 0.05):
+            if counter == 1000:
+                break
+            counter+=1
+            np.random.shuffle(training_df)
+            no_hidden.new_inputs(training_df)
+            no_hidden.train_data()
+            no_weights = new_no_weights
+            new_no_weights = no_hidden.get_weights()
+
+        counter = 0
+        while not np.all(np.abs(one_weights - new_one_weights) / one_weights <= 0.05):
+            if counter == 1000:
+                break
+            counter+=1
+            np.random.shuffle(training_df)
+            one_hidden.new_inputs(training_df)
+            one_hidden.train_data()
+            one_weights = new_one_weights
+            new_one_weights = one_hidden.get_weights()
+        
+        counter = 0
+        while not np.all(np.abs(two_weights - new_two_weights) / two_weights <= 0.05):
+            if counter == 1000:
+                break
+            counter+=1
+            #print(counter)
+            np.random.shuffle(training_df)
+            two_hidden.new_inputs(training_df)
+            two_hidden.train_data()
+            two_weights = new_two_weights
+            new_two_weights = two_hidden.get_weights()
+        
+        actual_zero, predicted_zero = no_hidden.test_data(tuning_set.to_numpy())
+        actual_one, predicted_one = one_hidden.test_data(tuning_set.to_numpy())
+        actual_two, predicted_two = two_hidden.test_data(tuning_set.to_numpy())
+
+        no_loss = loss_functions(predicted_zero.astype(float), actual_zero)
+        one_loss = loss_functions(predicted_one.astype(float), actual_one)
+        two_loss = loss_functions(predicted_two.astype(float), actual_two)
 
         score_no = np.mean(no_loss)
         if score_no > best_score_no:
             best_params_no['learning_rate'] = learning_rate
             best_params_no['batch_size'] = batch_size
+            best_score_no = score_no
 
         score_one = np.mean(one_loss)
         if score_one > best_score_one:
             best_params_one['learning_rate'] = learning_rate
             best_params_one['batch_size'] = batch_size
             best_params_one['nodes'] = [num_nodes[0]]
+            best_score_one = score_one
 
         score_two = np.mean(two_loss)
         if score_two > best_score_two:
             best_params_two['learning_rate'] = learning_rate
             best_params_two['batch_size'] = batch_size
-            best_params_one['nodes'] = num_nodes
+            best_params_two['nodes'] = num_nodes
+            best_score_two = score_two
 
+    print('------------------------------------')
     no_values = []
     one_values = []
     two_values = []
@@ -193,13 +249,13 @@ def main():
 
         no_hidden = FeedForwardNN(inputs= training_df, hidden_layers= 0, nodes=[], classification=DATASET_CLASS,
                                    learning_rate=best_params_no['learning_rate'], batch_size=best_params_no['batch_size'],
-                                   class_names=DATASET_NAMES)
+                                   num_of_classes=NUM_CLASSES, class_names=CLASS_NAMES)
         one_hidden = FeedForwardNN(inputs= training_df, hidden_layers= 1, nodes=best_params_one['nodes'], classification=DATASET_CLASS,
                                    learning_rate=best_params_one['learning_rate'], batch_size=best_params_one['batch_size'],
-                                   class_names=DATASET_NAMES)
+                                   num_of_classes=NUM_CLASSES, class_names=CLASS_NAMES)
         two_hidden = FeedForwardNN(inputs= training_df, hidden_layers= 2, nodes=best_params_two['nodes'], classification=DATASET_CLASS,
                                    learning_rate=best_params_two['learning_rate'], batch_size=best_params_two['batch_size'],
-                                   class_names=DATASET_NAMES)
+                                   num_of_classes=NUM_CLASSES, class_names=CLASS_NAMES)
         no_hidden.train_data()
         no_weights = no_hidden.get_weights()
         one_hidden.train_data()
@@ -218,37 +274,55 @@ def main():
         two_hidden.train_data()
         new_two_weights = two_hidden.get_weights()
 
-        while not np.all(np.abs(no_weights - new_no_weights) / no_weights <= 0.05):
+        no_converge = 1
+        while not np.all(np.isclose(no_weights, new_no_weights, rtol=0.05)):
+            if no_converge == 1000:
+                break
+            no_converge+=1
             np.random.shuffle(training_df)
             no_hidden.new_inputs(training_df)
             no_hidden.train_data()
+            no_weights = new_no_weights
             new_no_weights = no_hidden.get_weights()
 
-        while not np.all(np.abs(one_weights - new_one_weights) / one_weights <= 0.05):
+        one_converge = 1
+        while not np.all(np.isclose(one_weights, new_one_weights, rtol=0.05)):
+            if one_converge == 1000:
+                break
+            one_converge+=1
             np.random.shuffle(training_df)
             one_hidden.new_inputs(training_df)
             one_hidden.train_data()
+            one_weights = new_one_weights
             new_one_weights = one_hidden.get_weights()
 
-        while not np.all(np.abs(two_weights - new_two_weights) / two_weights <= 0.05):
+        two_converge = 1
+        while not np.all(np.isclose(two_weights, new_two_weights, rtol=0.05)):
+            if two_converge == 1000:
+                break
+            two_converge+=1
+            #print(0)
             np.random.shuffle(training_df)
             two_hidden.new_inputs(training_df)
             two_hidden.train_data()
+            two_weights = new_two_weights
             new_two_weights = two_hidden.get_weights()
 
-        actual_zero, predicted_zero = no_hidden.test_data(i)
-        actual_one, predicted_one = one_hidden.test_data(i)
-        actual_two, predicted_two = two_hidden.test_data(i)
+        actual_zero, predicted_zero = no_hidden.test_data(i.to_numpy())
+        actual_one, predicted_one = one_hidden.test_data(i.to_numpy())
+        actual_two, predicted_two = two_hidden.test_data(i.to_numpy())
 
-        no_loss = loss_functions(predicted_zero, actual_zero)
-        one_loss = loss_functions(predicted_one, actual_one)
-        two_loss = loss_functions(predicted_two, actual_two)
+        no_loss = loss_functions(predicted_zero.astype(float), actual_zero)
+        one_loss = loss_functions(predicted_one.astype(float), actual_one)
+        two_loss = loss_functions(predicted_two.astype(float), actual_two)
 
         no_values.append(no_loss)
         one_values.append(one_loss)
         two_values.append(two_loss)
 
     plot_loss_functions(no_values, one_values, two_values)
+    print(no_converge, one_converge, two_converge)
+    print(best_params_no, best_params_one, best_params_two)
 
 if __name__ == '__main__':  
     main()

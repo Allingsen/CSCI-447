@@ -12,7 +12,7 @@ class Node(ABC):
         sum = 0
         for data in weighted_data:
             sum += data
-        print("INPUTS: {}, WEIGHTS: {}, WEIGHTED_DATA: {}, SUM: {}\n".format(inputs, self.weights, weighted_data, sum))
+        #print("INPUTS: {}, WEIGHTS: {}, WEIGHTED_DATA: {}, SUM: {}\n".format(inputs, self.weights, weighted_data, sum))
         return np.sum(weighted_data)
 
     @abstractmethod
