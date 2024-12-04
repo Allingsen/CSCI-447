@@ -7,6 +7,7 @@ from differentialEvolution import differentialEvolution
 import feedForwardNN_GA
 import feedForwardNN
 
+# Breast Cancer Dataset
 DATASET_CALLED = 'breast-cancer'
 DATASET = 'datasets/breast-cancer-wisconsin.data'
 DATASET_NAMES = ['id', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'class']
@@ -14,6 +15,26 @@ CLASS_NAMES = ['2', '4']
 NUM_CLASSES = len(CLASS_NAMES)
 NUM_NODES = [4,4]
 DATASET_CLASS = True
+
+# Glass Dataset
+#DATASET_CALLED = 'glass'
+#DATASET = 'datasets/glass.data'
+#DATASET_NAMES = ['id', 'RI', 'Na', 'Mg', 'Al', 'Si', 'K', 'Ca', 'Ba', 'Fe', 'class']
+#CLASS_NAMES = ['1', '2', '3', '5', '6', '7']
+#NUM_CLASSES = len(CLASS_NAMES)
+#NUM_NODES = [6, 6]
+#DATASET_CLASS = True
+
+# Soybean Dataset
+# TODO: WHEN WORKING WITH SOYBEAN, FIND AND DELETE ALL INSTANCES OF .astype(float)
+#DATASET_CALLED = 'soybean'
+#DATASET = 'datasets/soybean-small.data'
+#DATASET_NAMES = [*range(35)] + ['class']
+#CLASS_NAMES = ['D1', 'D2', 'D3', 'D4']
+#NUM_CLASSES = len(CLASS_NAMES)
+#NUM_NODES = [20, 20]
+#DATASET_CLASS = True
+
 
 def plot_loss_functions(zero_BP_layer, one_BP_layer, two_BP_layer,
                         zero_GA_layer, one_GA_layer, two_GA_layer,
@@ -278,7 +299,9 @@ def loss_functions(estimates:np.array, actual:np.array):
 
 def main():
     # Creates a data process instance with accurate information from the .NAMES file
-    data = DataProcess(names=DATASET_NAMES, cat_class=True, id_col='id', missing_val='?') #<- TODO: Must be changed with every dataset
+    data = DataProcess(names=DATASET_NAMES, cat_class=True, id_col='id', missing_val='?') #<- TODO: Breast Cancer Data set
+    #data = DataProcess(names=DATASET_NAMES, cat_class=True, id_col='id') # <- TODO: Glass Dataset
+    #data = DataProcess(names=DATASET_NAMES, cat_class=True) #<- TODO: Soybean Dataset
 
     # Loads the data set, creates the tuning set, then splits into ten folds
     data.loadCSV(DATASET)
@@ -656,6 +679,15 @@ def main():
     #-------------------------------------------------------------------------------------
     # PARTICLE SWARM
     #-------------------------------------------------------------------------------------
+    
+
+    #-------------------------------------------------------------------------------------
+    # FIGURE GENERATION
+    #-------------------------------------------------------------------------------------
+    plot_loss_functions(no_bp_values, one_bp_values, two_bp_values,
+                        no_ga_values, one_ga_values, two_ga_values,
+                        no_de_values, one_de_values, two_de_values,
+                        None, None, None) # <- TODO: replace this with PSO lists of values
     
 if __name__ == '__main__':
     main()
