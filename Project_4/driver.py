@@ -311,6 +311,8 @@ def main():
     #-------------------------------------------------------------------------------------
     # BACK PROPOGATION
     #-------------------------------------------------------------------------------------
+    '''
+    print("------------------------BP------------------------")
     # Hyperparameters
     learning_rates = [0.001, 0.005, 0.01, 0.05, 0.1]
     batch_sizes = [2, 349] #<- TODO: Must be changed with every dataset
@@ -325,7 +327,12 @@ def main():
 
     # Performs grid search
     for i in learning_rates:
+        print('<----------->')
         for j in batch_sizes:
+            print('<><><><><><><>')
+            no_loss = []
+            one_loss = []
+            two_loss = []
             for k in folds:
                 # Creates the training and test fold. Training fold is all folds exept the one on the index.
                 # This allows for 10 experiements to be run on different data.
@@ -401,28 +408,26 @@ def main():
                 actual_one, predicted_one = one_hidden.test_data(tuning_set.to_numpy())
                 actual_two, predicted_two = two_hidden.test_data(tuning_set.to_numpy())
 
-                no_loss = loss_functions(predicted_zero.astype(float), actual_zero)
-                one_loss = loss_functions(predicted_one.astype(float), actual_one)
-                two_loss = loss_functions(predicted_two.astype(float), actual_two)
+                no_loss.append(loss_functions(predicted_zero.astype(float), actual_zero))
+                one_loss.append(loss_functions(predicted_one.astype(float), actual_one))
+                two_loss.append(loss_functions(predicted_two.astype(float), actual_two))
 
-                # If the loss(recall and precision) is better, save the hyperparameters
-                score_no = np.mean(no_loss)
-                if score_no > best_score_no:
-                    best_params_no['learning_rate'] = i
-                    best_params_no['batch_size'] = j
-                    best_score_no = score_no
-
-                score_one = np.mean(one_loss)
-                if score_one > best_score_one:
-                    best_params_one['learning_rate'] = i
-                    best_params_one['batch_size'] = j
-                    best_score_one = score_one
-
-                score_two = np.mean(two_loss)
-                if score_two > best_score_two:
-                    best_params_two['learning_rate'] = i
-                    best_params_two['batch_size'] = j
-                    best_score_two = score_two
+            # If the loss(recall and precision) is better, save the hyperparameters
+            score_no = np.mean(no_loss)
+            if score_no > best_score_no:
+                best_params_no['learning_rate'] = i
+                best_params_no['batch_size'] = j
+                best_score_no = score_no
+            score_one = np.mean(one_loss)
+            if score_one > best_score_one:
+                best_params_one['learning_rate'] = i
+                best_params_one['batch_size'] = j
+                best_score_one = score_one
+            score_two = np.mean(two_loss)
+            if score_two > best_score_two:
+                best_params_two['learning_rate'] = i
+                best_params_two['batch_size'] = j
+                best_score_two = score_two
 
     # Storage for loss and recall
     no_bp_values = []
@@ -510,7 +515,7 @@ def main():
         no_bp_values.append(no_loss)
         one_bp_values.append(one_loss)
         two_bp_values.append(two_loss)
-    
+    '''
     #-------------------------------------------------------------------------------------
     # Population is used in all the following methods, so it is only defined once
     population_size = [10, 20, 50, 100]
@@ -519,22 +524,28 @@ def main():
     #-------------------------------------------------------------------------------------
     # GENETIC ALGORITHM
     #-------------------------------------------------------------------------------------
+    print("------------------------GA------------------------")
     # Hyperparameters
     crossover_rate = [0.6, 0.7, 0.8, 0.9]
     mutation_rate = [0.05, 0.06, 0.07, 0.1]
 
     # Best Hyperparameter storage
     best_net_no = None
-    best_score_no = None
+    best_score_no = 0
     best_net_one = None
-    best_score_one = None
+    best_score_one = 0
     best_net_two = None
-    best_score_two = None
+    best_score_two = 0
 
     # Performs grid search
     for i in population_size:
+        print('<----------->')
         for j in crossover_rate:
+            print('<><><><><><><>')
             for k in mutation_rate:
+                no_loss = []
+                one_loss = []
+                two_loss = []
                 for l in folds:
                     # Creates the training and test fold. Training fold is all folds exept the one on the index.
                     # This allows for 10 experiements to be run on different data.
@@ -558,22 +569,32 @@ def main():
                     best_network_one, best_fitness_one = geneticAlg(population_one_layers, j, k)
                     best_network_two, best_fitness_two = geneticAlg(population_two_layers, j, k)
 
-                    # Checks for the best network, by fitness score
-                    if not best_score_no or best_fitness_no > best_score_no:
-                        best_score_no = best_fitness_no
-                        best_net_no = best_network_no
-
-                    if not best_score_one or best_fitness_one > best_score_one:
-                        best_score_one = best_fitness_one
-                        best_net_one = best_network_one
-
-                    if not best_score_two or best_fitness_two > best_score_two:
-                        best_score_two = best_fitness_two
-                        best_net_two = best_network_two
-                        
+                    # Tests on the tuning set, gets loss functions
+                    actual_zero, predicted_zero = best_network_no.test_data(tuning_set.to_numpy())
+                    actual_one, predicted_one = best_network_one.test_data(tuning_set.to_numpy())
+                    actual_two, predicted_two = best_network_two.test_data(tuning_set.to_numpy())
+                    
+                    no_loss.append(loss_functions(predicted_zero.astype(float), actual_zero))
+                    one_loss.append(loss_functions(predicted_one.astype(float), actual_one))
+                    two_loss.append(loss_functions(predicted_two.astype(float), actual_two))
+                    
                     del population_no_layers
                     del population_one_layers
                     del population_two_layers
+
+            # If the loss(recall and precision) is better, save the hyperparameters
+            score_no = np.mean(no_loss)
+            if score_no > best_score_no:
+                best_score_no = best_fitness_no
+                best_net_no = best_network_no
+            score_one = np.mean(one_loss)
+            if score_one > best_score_one:
+                best_score_one = best_fitness_one
+                best_net_one = best_network_one
+            score_two = np.mean(two_loss)
+            if score_two > best_score_two:
+                best_score_two = best_fitness_two
+                best_net_two = best_network_two
 
     # Storage for loss and recall
     no_ga_values = []
@@ -597,6 +618,7 @@ def main():
     #-------------------------------------------------------------------------------------
     # DIFFERENTIAL EVOLUTION
     #-------------------------------------------------------------------------------------
+    print("------------------------DE------------------------")
     # Hyperparameters
     binary_crossover_rate = [0.5, 0.6, 0.7, 0.9]
     scaling_factor = [0.1, .5, 1.5, 2]
@@ -611,13 +633,12 @@ def main():
 
     # Performs grid search
     for i in population_size:
-        print('------>', i)
         for j in binary_crossover_rate:
-            print(j)
             for k in scaling_factor:
-                print(k)
+                no_loss = []
+                one_loss = []
+                two_loss = []
                 for l in folds:
-                    print('Fold!')
                     # Creates the training and test fold. Training fold is all folds exept the one on the index.
                     # This allows for 10 experiements to be run on different data.
                     training_df = (pd.concat([x for x in folds if not (x.equals(l))], axis=0, ignore_index=True))
@@ -640,22 +661,32 @@ def main():
                     best_network_one, best_fitness_one = differentialEvolution(population_one_layers, j, k)
                     best_network_two, best_fitness_two = differentialEvolution(population_two_layers, j, k)
 
-                    # Checks for the best network, by fitness score
-                    if not best_score_no or best_fitness_no > best_score_no:
-                        best_score_no = best_fitness_no
-                        best_net_no = best_network_no
-
-                    if not best_score_one or best_fitness_one > best_score_one:
-                        best_score_one = best_fitness_one
-                        best_net_one = best_network_one
-
-                    if not best_score_two or best_fitness_two > best_score_two:
-                        best_score_two = best_fitness_two
-                        best_net_two = best_network_two
+                    # Tests on the tuning set, gets loss functions
+                    actual_zero, predicted_zero = best_network_no.test_data(tuning_set.to_numpy())
+                    actual_one, predicted_one = best_network_one.test_data(tuning_set.to_numpy())
+                    actual_two, predicted_two = best_net_two.test_data(tuning_set.to_numpy())
+                    
+                    no_loss.append(loss_functions(predicted_zero.astype(float), actual_zero))
+                    one_loss.append(loss_functions(predicted_one.astype(float), actual_one))
+                    two_loss.append(loss_functions(predicted_two.astype(float), actual_two))
                         
                     del population_no_layers
                     del population_one_layers
                     del population_two_layers
+
+            # If the loss(recall and precision) is better, save the hyperparameters
+            score_no = np.mean(no_loss)
+            if score_no > best_score_no:
+                best_score_no = best_fitness_no
+                best_net_no = best_network_no
+            score_one = np.mean(one_loss)
+            if score_one > best_score_one:
+                best_score_one = best_fitness_one
+                best_net_one = best_network_one
+            score_two = np.mean(two_loss)
+            if score_two > best_score_two:
+                best_score_two = best_fitness_two
+                best_net_two = best_network_two                    
     
     # Storage for loss and recall
     no_de_values = []
@@ -679,7 +710,7 @@ def main():
     #-------------------------------------------------------------------------------------
     # PARTICLE SWARM
     #-------------------------------------------------------------------------------------
-    
+    print("------------------------PS------------------------")
 
     #-------------------------------------------------------------------------------------
     # FIGURE GENERATION
