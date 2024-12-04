@@ -113,6 +113,7 @@ class FeedForwardNN():
         return all_actual, all_pred
 
     def test_data(self, examples: np.array) -> tuple:
+        '''Tests a new input of examples'''
         actual_val = np.array([None]*len(examples))
         predicted_val = np.array([None]*len(examples))
         for i, val in enumerate(examples):
@@ -231,7 +232,12 @@ class FeedForwardNN():
             cur_layer = cur_layer.prev_layer
 
     def get_weights(self):
+        '''Returns the weight matrix of the final layer'''
         cur_layer = self.inputLayer
         while(cur_layer.next_layer != None):
             cur_layer = cur_layer.next_layer
         return(cur_layer.weight_matrix)
+    
+    def get_state(self):
+        print(self.inputs)
+        print(self.inputLayer.activation_matrix)

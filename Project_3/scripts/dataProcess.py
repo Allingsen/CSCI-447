@@ -68,9 +68,11 @@ class DataProcess():
     def min_max_normalize(self):
         '''Normalizes numerical columns'''
         for i in self.cols:
+            # Does not normalize one hot encoded columns
             if i in self.categorical_cols or (self.cat_class and i == 'class'):
                 continue
             else:
+                # Performs min max normalization
                 col = self.df[i].to_numpy()
                 minimum = min(col)
                 maximum = max(col)
@@ -114,14 +116,12 @@ class DataProcess():
 
         
         # If there is an ID column, remove it
-        
         if self.id_col:
             self.df.drop(self.id_col, axis=1, inplace=True)
             self.cols.remove(self.id_col)
         
         #self.df.drop('model', axis=1, inplace=True)
         columns = [x for x in self.categorical_cols if x != 'class']
-        
         self.df = pd.get_dummies(self.df, columns=columns, dtype=float)
 
         # Sorts the values if regression, then creates a "class"
@@ -133,9 +133,8 @@ class DataProcess():
         self.df['class'] = self.df.pop('class')
         self.df = self.df.sample(frac=1).reset_index(drop=True)
 
+        # Normalize the data
         self.min_max_normalize()
-
-        self.df = self.df.drop([0,1])
 
     #--------------------------------------------------------------------------------------------------------------------------
 

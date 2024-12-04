@@ -1,5 +1,4 @@
 import numpy as np
-import pandas
 
 def tournament_sel(pop: int, networks: list, fitness: list) -> list:
     '''Performs Tournament selection'''
@@ -58,7 +57,7 @@ def geneticAlgEpoch(pop: list, cross_rate: float, mut_rate: float) -> list:
     for i, val in enumerate(pop):
         val.set_weights(updated_chrom_pop[i])
 
-    # Returns optimal fitness
+    # Returns the new generation
     return pop
 
 def geneticAlg(pop: list, cross_rate: float, mut_rate: float):
@@ -71,12 +70,14 @@ def geneticAlg(pop: list, cross_rate: float, mut_rate: float):
     best = max(fitness)
     fitness.clear()
 
+    # Runs through an epoch, finds the best
     offspring = geneticAlgEpoch(pop, cross_rate, mut_rate)
     for i in range(len(offspring)):
         fitness.append(np.mean(offspring[i].get_fitness()))
     best_off = max(fitness)
 
     counter = 0
+    # Continues until the two have converged
     while (np.abs(best - best_off) / best_off <= 0.05):
         if counter == 100: 
             break

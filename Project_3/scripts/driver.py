@@ -90,6 +90,7 @@ def plot_loss_functions(zero_layer: list, one_layer: list, two_layer:list) -> No
     plt.savefig('Project_3/figures/' +DATASET_CALLED+'_fig.png')
 
 def loss_functions(estimates:np.array, actual:np.array):
+        '''Calculates preiciosn and recall'''
         all_recall = []
         all_prec = []
         for Class in np.unique(actual):
@@ -124,15 +125,15 @@ def main():
 
     # Loads the data set, creates the tuning set, then splits into ten folds
     data.loadCSV(DATASET)
-    
     tuning_set = data.create_tuning_set()
     folds = data.k_fold_split(10)
     
-    # Iterates through, tests on the tuning set
+    # These values are changed depending on the data set
     learning_rates = [0.001, 0.005, 0.01, 0.05, 0.1]
     batch_sizes = [2, 349]
     no_nodes = [*range(1,9)]
 
+    # Sets up the best parameter storage
     best_params_no = {}
     best_score_no = 0
     best_params_one = {}
@@ -141,13 +142,15 @@ def main():
     best_score_two = 0
 
     for i in folds:
-        # Creates the training and test fold. Training fold is all folds exept the one on the index.
-        # This allows for 10 experiements to be run on different data.
+        # Randomly selcts the hyperparameters
         learning_rate = random.choice(learning_rates)
         batch_size = random.choice(batch_sizes)
         num_nodes = [random.choice(no_nodes), random.choice(no_nodes)]
+        # Creates the training and test fold. Training fold is all folds exept the one on the index.
+        # This allows for 10 experiements to be run on different data.
         training_df = (pd.concat([x for x in folds if not (x.equals(i))], axis=0, ignore_index=True)).to_numpy()
 
+        # Initilzes a network with no hidden layers, one hidden layer, and two hidden layers
         no_hidden = FeedForwardNN(inputs= training_df, hidden_layers= 0, nodes=[], classification=DATASET_CLASS,
                                    learning_rate=learning_rate, batch_size=batch_size, 
                                    num_of_classes=NUM_CLASSES, class_names=CLASS_NAMES)
@@ -157,6 +160,7 @@ def main():
         two_hidden = FeedForwardNN(inputs= training_df, hidden_layers= 2, nodes=[num_nodes[0], num_nodes[1]], classification=DATASET_CLASS,
                                    learning_rate=learning_rate, batch_size=batch_size, 
                                    num_of_classes=NUM_CLASSES,class_names=CLASS_NAMES)
+        # Trains the model on the given training set
         no_hidden.train_data()
         no_weights = no_hidden.get_weights()
         one_hidden.train_data()
@@ -164,6 +168,7 @@ def main():
         two_hidden.train_data()
         two_weights = two_hidden.get_weights()
 
+        # Shuffles the data, trains again
         np.random.shuffle(training_df)
         no_hidden.new_inputs(training_df)
         no_hidden.train_data()
@@ -175,7 +180,7 @@ def main():
         two_hidden.train_data()
         new_two_weights = two_hidden.get_weights()
         
-
+        # Continues this process until convergence for all models
         counter = 0
         while not np.all(np.abs(no_weights - new_no_weights) / no_weights <= 0.05):
             if counter == 1000:
@@ -210,6 +215,7 @@ def main():
             two_weights = new_two_weights
             new_two_weights = two_hidden.get_weights()
         
+         # Tests on the tuning set, gets loss function
         actual_zero, predicted_zero = no_hidden.test_data(tuning_set.to_numpy())
         actual_one, predicted_one = one_hidden.test_data(tuning_set.to_numpy())
         actual_two, predicted_two = two_hidden.test_data(tuning_set.to_numpy())
@@ -218,6 +224,7 @@ def main():
         one_loss = loss_functions(predicted_one.astype(float), actual_one)
         two_loss = loss_functions(predicted_two.astype(float), actual_two)
 
+        # If the loss(recall and precision) is better, save the hyperparameters
         score_no = np.mean(no_loss)
         if score_no > best_score_no:
             best_params_no['learning_rate'] = learning_rate
@@ -242,6 +249,7 @@ def main():
     no_values = []
     one_values = []
     two_values = []
+    # Performs the same process as above, this time using optimal hyperparameters
     for i in folds:
         # Creates the training and test fold. Training fold is all folds exept the one on the index.
         # This allows for 10 experiements to be run on different data.
@@ -256,6 +264,8 @@ def main():
         two_hidden = FeedForwardNN(inputs= training_df, hidden_layers= 2, nodes=best_params_two['nodes'], classification=DATASET_CLASS,
                                    learning_rate=best_params_two['learning_rate'], batch_size=best_params_two['batch_size'],
                                    num_of_classes=NUM_CLASSES, class_names=CLASS_NAMES)
+        
+        no_hidden.get_state()
         no_hidden.train_data()
         no_weights = no_hidden.get_weights()
         one_hidden.train_data()
@@ -316,10 +326,12 @@ def main():
         one_loss = loss_functions(predicted_one.astype(float), actual_one)
         two_loss = loss_functions(predicted_two.astype(float), actual_two)
 
+        # Saves the loss functions across all folds
         no_values.append(no_loss)
         one_values.append(one_loss)
         two_values.append(two_loss)
 
+    # Prints and plots desired values
     plot_loss_functions(no_values, one_values, two_values)
     print(no_converge, one_converge, two_converge)
     print(best_params_no, best_params_one, best_params_two)
