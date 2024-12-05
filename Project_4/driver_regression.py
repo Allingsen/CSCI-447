@@ -7,33 +7,12 @@ from differentialEvolution import differentialEvolution
 import feedForwardNN_GA
 import feedForwardNN
 
-# Breast Cancer Dataset
-DATASET_CALLED = 'breast-cancer'
-DATASET = 'datasets/breast-cancer-wisconsin.data'
-DATASET_NAMES = ['id', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'class']
-CLASS_NAMES = ['2', '4']
-NUM_CLASSES = len(CLASS_NAMES)
-NUM_NODES = [4,4]
-DATASET_CLASS = True
-
-# Glass Dataset
-#DATASET_CALLED = 'glass'
-#DATASET = 'datasets/glass.data'
-#DATASET_NAMES = ['id', 'RI', 'Na', 'Mg', 'Al', 'Si', 'K', 'Ca', 'Ba', 'Fe', 'class']
-#CLASS_NAMES = ['1', '2', '3', '5', '6', '7']
-#NUM_CLASSES = len(CLASS_NAMES)
-#NUM_NODES = [6, 6]
-#DATASET_CLASS = True
-
-# Soybean Dataset
-# TODO: WHEN WORKING WITH SOYBEAN, FIND AND DELETE ALL INSTANCES OF .astype(float)
-#DATASET_CALLED = 'soybean'
-#DATASET = 'datasets/soybean-small.data'
-#DATASET_NAMES = [*range(35)] + ['class']
-#CLASS_NAMES = ['D1', 'D2', 'D3', 'D4']
-#NUM_CLASSES = len(CLASS_NAMES)
-#NUM_NODES = [20, 20]
-#DATASET_CLASS = True
+# Forest Fires Data Set
+DATASET_CALLED = 'forestfires'
+DATASET = 'Project_3/datasets/forestfires.data'
+DATASET_NAMES = ['x', 'y', 'month', 'day', 'ffmc', 'dmc', 'dc', 'isi', 'temp', 'rh', 'wind', 'rain', 'class']
+DATASET_CLASS = False
+NUM_NODES = [7,7]
 
 
 def plot_loss_functions(zero_BP_layer, one_BP_layer, two_BP_layer,
@@ -46,215 +25,93 @@ def plot_loss_functions(zero_BP_layer, one_BP_layer, two_BP_layer,
     fig.tight_layout(pad=3.0)
     cmap = plt.get_cmap('tab10')
     plt.subplots_adjust(left=0.16)
-    # Creates the space where the bars will be placed
-    recall = np.linspace(0.7, 1.3, 10)
-    precision = np.linspace(1.7, 2.3, 10) 
-    # Creates the tick marking
-    ticks = [20, 40, 60, 80, 100]
-    tick_labels = ['20%', '40%', '60%', '80%', '100%']
 
     #-------------------------------------------------------
     ax[0][0].set_ylabel('Backpropogation')
-    ax[0][0].bar(x= precision,
-          height=[x[0] for x in zero_BP_layer],
+    ax[0][0].bar(x= range(10),
+          height=[x for x in zero_BP_layer],
           color=cmap.colors, 
-          width=0.05)
+          width=0.5)
     
-    ax[0][0].bar(x= recall, 
-              height=[x[1] for x in zero_BP_layer], 
-              color=cmap.colors, 
-              width=0.05)
-    
-    ax[0][1].bar(x= precision,
-          height=[x[0] for x in one_BP_layer],
+    ax[0][1].bar(x= range(10),
+          height=[x for x in one_BP_layer],
           color=cmap.colors, 
-          width=0.05)
+          width=0.5)
     
-    ax[0][1].bar(x= recall, 
-              height=[x[1] for x in one_BP_layer], 
-              color=cmap.colors, 
-              width=0.05)
-    
-    ax[0][2].bar(x= precision,
-          height=[x[0] for x in two_BP_layer],
+    ax[0][2].bar(x= range(10),
+          height=[x for x in two_BP_layer],
           color=cmap.colors, 
-          width=0.05)
+          width=0.5)
     
-    ax[0][2].bar(x= recall, 
-              height=[x[1] for x in two_BP_layer], 
-              color=cmap.colors, 
-              width=0.05)
-    
-    ax[0][0].set_xticks([1,2])
-    ax[0][0].set_xticklabels(['Recall','Precision'])
     ax[0][0].set_ylabel('Backpropogation', size=12)
-    ax[0][0].set_yticks([x/100 for x in ticks])
-    ax[0][0].set_yticklabels(tick_labels)
     ax[0][0].set_title('No Hidden Layers')
-
-    ax[0][1].set_xticks([1,2])
-    ax[0][1].set_xticklabels(['Recall','Precision'])
-    ax[0][1].set_yticks([x/100 for x in ticks])
-    ax[0][1].set_yticklabels(tick_labels)
     ax[0][1].set_title('One Hidden Layer')
-
-    ax[0][2].set_xticks([1,2])
-    ax[0][2].set_xticklabels(['Recall','Precision'])
-    ax[0][2].set_yticks([x/100 for x in ticks])
-    ax[0][2].set_yticklabels(tick_labels)
     ax[0][2].set_title('Two Hidden Layers')
 
     #-------------------------------------------------------
     
-    ax[1][0].bar(x= precision,
-        height=[x[0] for x in zero_GA_layer],
+    ax[1][0].bar(x= range(10),
+        height=[x for x in zero_GA_layer],
         color=cmap.colors, 
-        width=0.05)
+        width=0.5)
     
-    ax[1][0].bar(x= recall, 
-        height=[x[1] for x in zero_GA_layer], 
+    ax[1][1].bar(x= range(10),
+        height=[x for x in one_GA_layer],
         color=cmap.colors, 
-        width=0.05)
+        width=0.5)
     
-    ax[1][1].bar(x= precision,
-        height=[x[0] for x in one_GA_layer],
+    ax[1][2].bar(x= range(10),
+        height=[x for x in two_GA_layer],
         color=cmap.colors, 
-        width=0.05)
+        width=0.5)
     
-    ax[1][1].bar(x= recall, 
-        height=[x[1] for x in one_GA_layer], 
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[1][2].bar(x= precision,
-        height=[x[0] for x in two_GA_layer],
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[1][2].bar(x= recall, 
-        height=[x[1] for x in two_GA_layer], 
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[1][0].set_xticks([1,2])
-    ax[1][0].set_xticklabels(['Recall','Precision'])
     ax[1][0].set_ylabel('Genetic Algorithm', size=12)
-    ax[1][0].set_yticks([x/100 for x in ticks])
-    ax[1][0].set_yticklabels(tick_labels)
     ax[1][0].set_title('No Hidden Layers')
-
-    ax[1][1].set_xticks([1,2])
-    ax[1][1].set_xticklabels(['Recall','Precision'])
-    ax[1][1].set_yticks([x/100 for x in ticks])
-    ax[1][1].set_yticklabels(tick_labels)
     ax[1][1].set_title('One Hidden Layer')
-
-    ax[1][2].set_xticks([1,2])
-    ax[1][2].set_xticklabels(['Recall','Precision'])
-    ax[1][2].set_yticks([x/100 for x in ticks])
-    ax[1][2].set_yticklabels(tick_labels)
     ax[1][2].set_title('Two Hidden Layers')
 
     #-------------------------------------------------------
     
-    ax[2][0].bar(x= precision,
-        height=[x[0] for x in zero_DE_layer],
+    ax[2][0].bar(x= range(10),
+        height=[x for x in zero_DE_layer],
         color=cmap.colors, 
-        width=0.05)
+        width=0.5)
     
-    ax[2][0].bar(x= recall, 
-        height=[x[1] for x in zero_DE_layer], 
+    ax[2][1].bar(x= range(10),
+        height=[x for x in one_DE_layer],
         color=cmap.colors, 
-        width=0.05)
+        width=0.5)
     
-    ax[2][1].bar(x= precision,
-        height=[x[0] for x in one_DE_layer],
+    ax[2][2].bar(x= range(10),
+        height=[x for x in two_DE_layer],
         color=cmap.colors, 
-        width=0.05)
+        width=0.5)
     
-    ax[2][1].bar(x= recall, 
-        height=[x[1] for x in one_DE_layer], 
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[2][2].bar(x= precision,
-        height=[x[0] for x in two_DE_layer],
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[2][2].bar(x= recall, 
-        height=[x[1] for x in two_DE_layer], 
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[2][0].set_xticks([1,2])
-    ax[2][0].set_xticklabels(['Recall','Precision'])
     ax[2][0].set_ylabel('Differential Evolution', size=12)
-    ax[2][0].set_yticks([x/100 for x in ticks])
-    ax[2][0].set_yticklabels(tick_labels)
     ax[2][0].set_title('No Hidden Layers')
-
-    ax[2][1].set_xticks([1,2])
-    ax[2][1].set_xticklabels(['Recall','Precision'])
-    ax[2][1].set_yticks([x/100 for x in ticks])
-    ax[2][1].set_yticklabels(tick_labels)
     ax[2][1].set_title('One Hidden Layer')
-
-    ax[2][2].set_xticks([1,2])
-    ax[2][2].set_xticklabels(['Recall','Precision'])
-    ax[2][2].set_yticks([x/100 for x in ticks])
-    ax[2][2].set_yticklabels(tick_labels)
     ax[2][2].set_title('Two Hidden Layers')
 
     #-------------------------------------------------------
     
-    ax[3][0].bar(x= precision,
-        height=[x[0] for x in zero_PS_layer],
+    ax[3][0].bar(x= range(10),
+        height=[x for x in zero_PS_layer],
         color=cmap.colors, 
-        width=0.05)
+        width=0.5)
     
-    ax[3][0].bar(x= recall, 
-        height=[x[1] for x in zero_PS_layer], 
+    ax[3][1].bar(x= range(10),
+        height=[x for x in one_PS_layer],
         color=cmap.colors, 
-        width=0.05)
+        width=0.5)
     
-    ax[3][1].bar(x= precision,
-        height=[x[0] for x in one_PS_layer],
+    ax[3][2].bar(x= range(10),
+        height=[x for x in two_PS_layer],
         color=cmap.colors, 
-        width=0.05)
+        width=0.5)
     
-    ax[3][1].bar(x= recall, 
-        height=[x[1] for x in one_PS_layer], 
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[3][2].bar(x= precision,
-        height=[x[0] for x in two_PS_layer],
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[3][2].bar(x= recall, 
-        height=[x[1] for x in two_PS_layer], 
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[3][0].set_xticks([1,2])
-    ax[3][0].set_xticklabels(['Recall','Precision'])
     ax[3][0].set_ylabel('Particle Swarm', size=12)
-    ax[3][0].set_yticks([x/100 for x in ticks])
-    ax[3][0].set_yticklabels(tick_labels)
     ax[3][0].set_title('No Hidden Layers')
-
-    ax[3][1].set_xticks([1,2])
-    ax[3][1].set_xticklabels(['Recall','Precision'])
-    ax[3][1].set_yticks([x/100 for x in ticks])
-    ax[3][1].set_yticklabels(tick_labels)
     ax[3][1].set_title('One Hidden Layer')
-
-    ax[3][2].set_xticks([1,2])
-    ax[3][2].set_xticklabels(['Recall','Precision'])
-    ax[3][2].set_yticks([x/100 for x in ticks])
-    ax[3][2].set_yticklabels(tick_labels)
     ax[3][2].set_title('Two Hidden Layers')
     
 
@@ -269,44 +126,19 @@ def plot_loss_functions(zero_BP_layer, one_BP_layer, two_BP_layer,
 
 def loss_functions(estimates:np.array, actual:np.array):
         '''Calculates preiciosn and recall'''
-        all_recall = []
-        all_prec = []
-        for Class in np.unique(actual):
-            #confusion_local represents the TPs, TNs, FPs, and FNs for a specific class
-            confusion_local = np.zeros(4)
-            for i in range(len(estimates)):
-                if(actual[i] == Class and estimates[i] == Class):
-                    confusion_local[0] += 1
-                elif(actual[i] != Class and estimates[i] != Class):
-                    confusion_local[1] += 1
-                elif(actual[i] != Class and estimates[i] == Class):
-                    confusion_local[2] += 1
-                else:
-                    confusion_local[3] += 1
-            if confusion_local[0] == 0 and confusion_local[3] == 0:
-                all_recall.append(0)
-            else:
-                all_recall.append(confusion_local[0]/(confusion_local[0] + confusion_local[3]))
-            if confusion_local[0] == 0 and confusion_local[2] == 0:
-                all_prec.append(0)
-            else:
-                all_prec.append(confusion_local[0]/(confusion_local[0] + confusion_local[2]))
-
-        recall = np.mean(all_recall)
-        precision = np.mean(all_prec)
-        print((recall, precision))
-        return(recall, precision)
+        sum = (actual - estimates)**2
+        mse = np.mean(sum)
+        print(mse)
+        return mse
 
 def main():
     # Creates a data process instance with accurate information from the .NAMES file
-    data = DataProcess(names=DATASET_NAMES, cat_class=True, id_col='id', missing_val='?') #<- TODO: Breast Cancer Data set
-    #data = DataProcess(names=DATASET_NAMES, cat_class=True, id_col='id') # <- TODO: Glass Dataset
-    #data = DataProcess(names=DATASET_NAMES, cat_class=True) #<- TODO: Soybean Dataset
+    data = DataProcess(names=DATASET_NAMES,cat_class=False,regression=True)
 
     # Loads the data set, creates the tuning set, then splits into ten folds
     data.loadCSV(DATASET)
     tuning_set = data.create_tuning_set()
-    folds = data.k_fold_split(10)
+    folds = data.reg_k_fold_split(10)
     
     #-------------------------------------------------------------------------------------
     # BACK PROPOGATION
@@ -314,21 +146,21 @@ def main():
     print("------------------------BP------------------------")
     # Hyperparameters
     learning_rates = [0.001, 0.005, 0.01, 0.05, 0.1]
-    batch_sizes = [2, 349] #<- TODO: Must be changed with every dataset
+    batch_sizes = [12, 43, 86, 129] #<- TODO: Must be changed with every dataset
 
     # Best Hyperparameter storage
     best_params_no = {}
-    best_score_no = 0
+    best_score_no = 100
     best_params_one = {}
-    best_score_one = 0
+    best_score_one = 100
     best_params_two = {}
-    best_score_two = 0
+    best_score_two = 100
 
     # Performs grid search
     for i in learning_rates:
-        print('<----------->')
+        print('<-----------<')
         for j in batch_sizes:
-            print('<><><><><><><>')
+            print('<<<<<<<<<<<<<<')
             no_loss = []
             one_loss = []
             two_loss = []
@@ -339,14 +171,11 @@ def main():
 
                 # Initilzes a network with no hidden layers, one hidden layer, and two hidden layers
                 no_hidden = feedForwardNN.FeedForwardNN(inputs= training_df, hidden_layers= 0, nodes=[], classification=DATASET_CLASS,
-                                           learning_rate=i, batch_size=j, 
-                                           num_of_classes=NUM_CLASSES, class_names=CLASS_NAMES)
+                                           learning_rate=i, batch_size=j)
                 one_hidden = feedForwardNN.FeedForwardNN(inputs= training_df, hidden_layers= 1, nodes=[NUM_NODES[0]], classification=DATASET_CLASS,
-                                           learning_rate=i, batch_size=j,
-                                           num_of_classes=NUM_CLASSES, class_names=CLASS_NAMES)
+                                           learning_rate=i, batch_size=j)
                 two_hidden = feedForwardNN.FeedForwardNN(inputs= training_df, hidden_layers= 2, nodes=NUM_NODES, classification=DATASET_CLASS,
-                                           learning_rate=i, batch_size=j, 
-                                           num_of_classes=NUM_CLASSES,class_names=CLASS_NAMES)
+                                           learning_rate=i, batch_size=j)
                 
                 # Trains the model on the given training set
                 no_hidden.train_data()
@@ -413,17 +242,17 @@ def main():
 
             # If the loss(recall and precision) is better, save the hyperparameters
             score_no = np.mean(no_loss)
-            if score_no >= best_score_no:
+            if score_no <= best_score_no:
                 best_params_no['learning_rate'] = i
                 best_params_no['batch_size'] = j
                 best_score_no = score_no
             score_one = np.mean(one_loss)
-            if score_one >= best_score_one:
+            if score_one <= best_score_one:
                 best_params_one['learning_rate'] = i
                 best_params_one['batch_size'] = j
                 best_score_one = score_one
             score_two = np.mean(two_loss)
-            if score_two >= best_score_two:
+            if score_two <= best_score_two:
                 best_params_two['learning_rate'] = i
                 best_params_two['batch_size'] = j
                 best_score_two = score_two
@@ -441,14 +270,11 @@ def main():
 
         # Initilzes a network with no hidden layers, one hidden layer, and two hidden layers
         no_hidden = feedForwardNN.FeedForwardNN(inputs= training_df, hidden_layers= 0, nodes=[], classification=DATASET_CLASS,
-                                   learning_rate=best_params_no['learning_rate'], batch_size=best_params_no['batch_size'], 
-                                   num_of_classes=NUM_CLASSES, class_names=CLASS_NAMES)
+                                   learning_rate=best_params_no['learning_rate'], batch_size=best_params_no['batch_size'])
         one_hidden = feedForwardNN.FeedForwardNN(inputs= training_df, hidden_layers= 1, nodes=[NUM_NODES[0]], classification=DATASET_CLASS,
-                                   learning_rate=best_params_one['learning_rate'], batch_size=best_params_one['batch_size'],
-                                   num_of_classes=NUM_CLASSES, class_names=CLASS_NAMES)
+                                   learning_rate=best_params_one['learning_rate'], batch_size=best_params_one['batch_size'])
         two_hidden = feedForwardNN.FeedForwardNN(inputs= training_df, hidden_layers= 2, nodes=NUM_NODES, classification=DATASET_CLASS,
-                                   learning_rate=best_params_two['learning_rate'], batch_size=best_params_two['batch_size'], 
-                                   num_of_classes=NUM_CLASSES,class_names=CLASS_NAMES)
+                                   learning_rate=best_params_two['learning_rate'], batch_size=best_params_two['batch_size'])
         
         # Trains the model on the given training set
         no_hidden.train_data()
@@ -538,9 +364,9 @@ def main():
 
     # Performs grid search
     for i in population_size:
-        print('<----------->')
+        print('<-----------<')
         for j in crossover_rate:
-            print('<><><><><><><>')
+            print('<<<<<<<<<<<<<<')
             for k in mutation_rate:
                 no_loss = []
                 one_loss = []
@@ -557,11 +383,11 @@ def main():
                     population_two_layers = []
                     for _ in range(i):
                         population_no_layers.append(feedForwardNN_GA.FeedForwardNN(inputs= use_df, hidden_layers= 0, nodes=[],
-                                                                                    classification=DATASET_CLASS, num_of_classes=NUM_CLASSES, class_names=CLASS_NAMES))
+                                                                                    classification=DATASET_CLASS))
                         population_one_layers.append(feedForwardNN_GA.FeedForwardNN(inputs= use_df, hidden_layers= 1, nodes=[NUM_NODES[0]],
-                                                                                    classification=DATASET_CLASS, num_of_classes=NUM_CLASSES, class_names=CLASS_NAMES))
+                                                                                    classification=DATASET_CLASS))
                         population_two_layers.append(feedForwardNN_GA.FeedForwardNN(inputs= use_df, hidden_layers= 2, nodes=NUM_NODES,
-                                                                                    classification=DATASET_CLASS, num_of_classes=NUM_CLASSES, class_names=CLASS_NAMES))
+                                                                                    classification=DATASET_CLASS))
                     
                     # Gets the initial weights
                     best_network_no, best_fitness_no = geneticAlg(population_no_layers, j, k)
@@ -583,15 +409,15 @@ def main():
 
             # If the loss(recall and precision) is better, save the hyperparameters
             score_no = np.mean(no_loss)
-            if score_no >= best_score_no:
+            if score_no <= best_score_no:
                 best_score_no = best_fitness_no
                 best_net_no = best_network_no
             score_one = np.mean(one_loss)
-            if score_one >= best_score_one:
+            if score_one <= best_score_one:
                 best_score_one = best_fitness_one
                 best_net_one = best_network_one
             score_two = np.mean(two_loss)
-            if score_two >= best_score_two:
+            if score_two <= best_score_two:
                 best_score_two = best_fitness_two
                 best_net_two = best_network_two
 
@@ -649,11 +475,11 @@ def main():
                     population_two_layers = []
                     for _ in range(i):
                         population_no_layers.append(feedForwardNN_GA.FeedForwardNN(inputs= use_df, hidden_layers= 0, nodes=[],
-                                                                                    classification=DATASET_CLASS, num_of_classes=NUM_CLASSES, class_names=CLASS_NAMES))
+                                                                                    classification=DATASET_CLASS))
                         population_one_layers.append(feedForwardNN_GA.FeedForwardNN(inputs= use_df, hidden_layers= 1, nodes=[NUM_NODES[0]],
-                                                                                    classification=DATASET_CLASS, num_of_classes=NUM_CLASSES, class_names=CLASS_NAMES))
+                                                                                    classification=DATASET_CLASS))
                         population_two_layers.append(feedForwardNN_GA.FeedForwardNN(inputs= use_df, hidden_layers= 2, nodes=NUM_NODES,
-                                                                                    classification=DATASET_CLASS, num_of_classes=NUM_CLASSES, class_names=CLASS_NAMES))
+                                                                                    classification=DATASET_CLASS))
                     
                     # Gets the initial weights
                     best_network_no, best_fitness_no = differentialEvolution(population_no_layers, j, k)
@@ -675,15 +501,15 @@ def main():
 
             # If the loss(recall and precision) is better, save the hyperparameters
             score_no = np.mean(no_loss)
-            if score_no >= best_score_no:
+            if score_no <= best_score_no:
                 best_score_no = best_fitness_no
                 best_net_no = best_network_no
             score_one = np.mean(one_loss)
-            if score_one >= best_score_one:
+            if score_one <= best_score_one:
                 best_score_one = best_fitness_one
                 best_net_one = best_network_one
             score_two = np.mean(two_loss)
-            if score_two >= best_score_two:
+            if score_two <= best_score_two:
                 best_score_two = best_fitness_two
                 best_net_two = best_network_two                    
     
