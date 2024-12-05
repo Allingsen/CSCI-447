@@ -3,11 +3,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from dataProcess import DataProcess
 from geneticAlgorithm import geneticAlg
-from differentialEvolution import differentialEvolution
+from ParticleSwarm import ParticleSwarm
+from NeuralNetworkPSO import NeuralNetworkPSO
 import feedForwardNN_GA
 import feedForwardNN
+import time
 
-# Breast Cancer Dataset
 DATASET_CALLED = 'breast-cancer'
 DATASET = 'datasets/breast-cancer-wisconsin.data'
 DATASET_NAMES = ['id', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'class']
@@ -16,247 +17,73 @@ NUM_CLASSES = len(CLASS_NAMES)
 NUM_NODES = [4,4]
 DATASET_CLASS = True
 
-# Glass Dataset
-#DATASET_CALLED = 'glass'
-#DATASET = 'datasets/glass.data'
-#DATASET_NAMES = ['id', 'RI', 'Na', 'Mg', 'Al', 'Si', 'K', 'Ca', 'Ba', 'Fe', 'class']
-#CLASS_NAMES = ['1', '2', '3', '5', '6', '7']
-#NUM_CLASSES = len(CLASS_NAMES)
-#NUM_NODES = [6, 6]
-#DATASET_CLASS = True
-
-# Soybean Dataset
-# TODO: WHEN WORKING WITH SOYBEAN, FIND AND DELETE ALL INSTANCES OF .astype(float)
-#DATASET_CALLED = 'soybean'
-#DATASET = 'datasets/soybean-small.data'
-#DATASET_NAMES = [*range(35)] + ['class']
-#CLASS_NAMES = ['D1', 'D2', 'D3', 'D4']
-#NUM_CLASSES = len(CLASS_NAMES)
-#NUM_NODES = [20, 20]
-#DATASET_CLASS = True
-
-
-def plot_loss_functions(zero_BP_layer, one_BP_layer, two_BP_layer,
-                        zero_GA_layer, one_GA_layer, two_GA_layer,
-                        zero_DE_layer, one_DE_layer, two_DE_layer,
-                        zero_PS_layer, one_PS_layer, two_PS_layer,) -> None:
+def plot_loss_functions(zero_layer: list, one_layer: list, two_layer:list) -> None:
     '''Creates a figure with four subplots showing our results'''
     # Sets up plot for displaying 
-    fig, ax = plt.subplots(4, 3, figsize=(12,10))
-    fig.tight_layout(pad=3.0)
+    fig, ax = plt.subplots(1, 4, figsize=(10,4))
+    fig.tight_layout(pad=5.0)
     cmap = plt.get_cmap('tab10')
-    plt.subplots_adjust(left=0.16)
+    plt.subplots_adjust(left=0.2)
     # Creates the space where the bars will be placed
     recall = np.linspace(0.7, 1.3, 10)
     precision = np.linspace(1.7, 2.3, 10) 
+
     # Creates the tick marking
-    ticks = [20, 40, 60, 80, 100]
-    tick_labels = ['20%', '40%', '60%', '80%', '100%']
+    ticks = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 
-    #-------------------------------------------------------
-    ax[0][0].set_ylabel('Backpropogation')
-    ax[0][0].bar(x= precision,
-          height=[x[0] for x in zero_BP_layer],
+    ax[0].bar(x= recall,
+          height=[x[0] for x in zero_layer],
           color=cmap.colors, 
           width=0.05)
     
-    ax[0][0].bar(x= recall, 
-              height=[x[1] for x in zero_BP_layer], 
+    ax[0].bar(x= precision, 
+              height=[x[1] for x in zero_layer], 
               color=cmap.colors, 
               width=0.05)
     
-    ax[0][1].bar(x= precision,
-          height=[x[0] for x in one_BP_layer],
+    ax[0].set_xticks([1,2])
+    ax[0].set_xticklabels(['Recall','Precision'])
+    ax[0].set_ylabel('Percentage')
+    ax[0].set_xlabel('Fold')
+    ax[0].set_yticks([x/100 for x in ticks])
+    ax[0].set_yticklabels(ticks)
+    ax[0].set_title('No Hidden Layers')
+    
+    ax[1].bar(x= recall,
+      height=[x[0] for x in one_layer],
+      color=cmap.colors, 
+      width=0.05)
+
+    ax[1].bar(x= precision, 
+              height=[x[1] for x in one_layer], 
+              color=cmap.colors, 
+              width=0.05)
+    
+    ax[1].set_xticks([1,2])
+    ax[1].set_xticklabels(['Recall','Precision'])
+    ax[1].set_ylabel('Percentage')
+    ax[1].set_xlabel('Fold')
+    ax[1].set_yticks([x/100 for x in ticks])
+    ax[1].set_yticklabels(ticks)
+    ax[1].set_title('One Hidden Layer')
+
+    ax[2].bar(x= recall,
+          height=[x[0] for x in two_layer],
           color=cmap.colors, 
           width=0.05)
     
-    ax[0][1].bar(x= recall, 
-              height=[x[1] for x in one_BP_layer], 
+    ax[2].bar(x= precision, 
+              height=[x[1] for x in two_layer], 
               color=cmap.colors, 
               width=0.05)
     
-    ax[0][2].bar(x= precision,
-          height=[x[0] for x in two_BP_layer],
-          color=cmap.colors, 
-          width=0.05)
-    
-    ax[0][2].bar(x= recall, 
-              height=[x[1] for x in two_BP_layer], 
-              color=cmap.colors, 
-              width=0.05)
-    
-    ax[0][0].set_xticks([1,2])
-    ax[0][0].set_xticklabels(['Recall','Precision'])
-    ax[0][0].set_ylabel('Backpropogation', size=12)
-    ax[0][0].set_yticks([x/100 for x in ticks])
-    ax[0][0].set_yticklabels(tick_labels)
-    ax[0][0].set_title('No Hidden Layers')
-
-    ax[0][1].set_xticks([1,2])
-    ax[0][1].set_xticklabels(['Recall','Precision'])
-    ax[0][1].set_yticks([x/100 for x in ticks])
-    ax[0][1].set_yticklabels(tick_labels)
-    ax[0][1].set_title('One Hidden Layer')
-
-    ax[0][2].set_xticks([1,2])
-    ax[0][2].set_xticklabels(['Recall','Precision'])
-    ax[0][2].set_yticks([x/100 for x in ticks])
-    ax[0][2].set_yticklabels(tick_labels)
-    ax[0][2].set_title('Two Hidden Layers')
-
-    #-------------------------------------------------------
-    
-    ax[1][0].bar(x= precision,
-        height=[x[0] for x in zero_GA_layer],
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[1][0].bar(x= recall, 
-        height=[x[1] for x in zero_GA_layer], 
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[1][1].bar(x= precision,
-        height=[x[0] for x in one_GA_layer],
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[1][1].bar(x= recall, 
-        height=[x[1] for x in one_GA_layer], 
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[1][2].bar(x= precision,
-        height=[x[0] for x in two_GA_layer],
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[1][2].bar(x= recall, 
-        height=[x[1] for x in two_GA_layer], 
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[1][0].set_xticks([1,2])
-    ax[1][0].set_xticklabels(['Recall','Precision'])
-    ax[1][0].set_ylabel('Genetic Algorithm', size=12)
-    ax[1][0].set_yticks([x/100 for x in ticks])
-    ax[1][0].set_yticklabels(tick_labels)
-    ax[1][0].set_title('No Hidden Layers')
-
-    ax[1][1].set_xticks([1,2])
-    ax[1][1].set_xticklabels(['Recall','Precision'])
-    ax[1][1].set_yticks([x/100 for x in ticks])
-    ax[1][1].set_yticklabels(tick_labels)
-    ax[1][1].set_title('One Hidden Layer')
-
-    ax[1][2].set_xticks([1,2])
-    ax[1][2].set_xticklabels(['Recall','Precision'])
-    ax[1][2].set_yticks([x/100 for x in ticks])
-    ax[1][2].set_yticklabels(tick_labels)
-    ax[1][2].set_title('Two Hidden Layers')
-
-    #-------------------------------------------------------
-    
-    ax[2][0].bar(x= precision,
-        height=[x[0] for x in zero_DE_layer],
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[2][0].bar(x= recall, 
-        height=[x[1] for x in zero_DE_layer], 
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[2][1].bar(x= precision,
-        height=[x[0] for x in one_DE_layer],
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[2][1].bar(x= recall, 
-        height=[x[1] for x in one_DE_layer], 
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[2][2].bar(x= precision,
-        height=[x[0] for x in two_DE_layer],
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[2][2].bar(x= recall, 
-        height=[x[1] for x in two_DE_layer], 
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[2][0].set_xticks([1,2])
-    ax[2][0].set_xticklabels(['Recall','Precision'])
-    ax[2][0].set_ylabel('Differential Evolution', size=12)
-    ax[2][0].set_yticks([x/100 for x in ticks])
-    ax[2][0].set_yticklabels(tick_labels)
-    ax[2][0].set_title('No Hidden Layers')
-
-    ax[2][1].set_xticks([1,2])
-    ax[2][1].set_xticklabels(['Recall','Precision'])
-    ax[2][1].set_yticks([x/100 for x in ticks])
-    ax[2][1].set_yticklabels(tick_labels)
-    ax[2][1].set_title('One Hidden Layer')
-
-    ax[2][2].set_xticks([1,2])
-    ax[2][2].set_xticklabels(['Recall','Precision'])
-    ax[2][2].set_yticks([x/100 for x in ticks])
-    ax[2][2].set_yticklabels(tick_labels)
-    ax[2][2].set_title('Two Hidden Layers')
-
-    #-------------------------------------------------------
-    
-    ax[3][0].bar(x= precision,
-        height=[x[0] for x in zero_PS_layer],
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[3][0].bar(x= recall, 
-        height=[x[1] for x in zero_PS_layer], 
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[3][1].bar(x= precision,
-        height=[x[0] for x in one_PS_layer],
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[3][1].bar(x= recall, 
-        height=[x[1] for x in one_PS_layer], 
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[3][2].bar(x= precision,
-        height=[x[0] for x in two_PS_layer],
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[3][2].bar(x= recall, 
-        height=[x[1] for x in two_PS_layer], 
-        color=cmap.colors, 
-        width=0.05)
-    
-    ax[3][0].set_xticks([1,2])
-    ax[3][0].set_xticklabels(['Recall','Precision'])
-    ax[3][0].set_ylabel('Particle Swarm', size=12)
-    ax[3][0].set_yticks([x/100 for x in ticks])
-    ax[3][0].set_yticklabels(tick_labels)
-    ax[3][0].set_title('No Hidden Layers')
-
-    ax[3][1].set_xticks([1,2])
-    ax[3][1].set_xticklabels(['Recall','Precision'])
-    ax[3][1].set_yticks([x/100 for x in ticks])
-    ax[3][1].set_yticklabels(tick_labels)
-    ax[3][1].set_title('One Hidden Layer')
-
-    ax[3][2].set_xticks([1,2])
-    ax[3][2].set_xticklabels(['Recall','Precision'])
-    ax[3][2].set_yticks([x/100 for x in ticks])
-    ax[3][2].set_yticklabels(tick_labels)
-    ax[3][2].set_title('Two Hidden Layers')
-    
+    ax[2].set_xticks([1,2])
+    ax[2].set_xticklabels(['Recall','Precision'])
+    ax[2].set_ylabel('Percentage')
+    ax[2].set_xlabel('Fold')
+    ax[2].set_yticks([x/100 for x in ticks])
+    ax[2].set_yticklabels(ticks)
+    ax[2].set_title('Two Hidden Layers')
 
     labels = {}
     for i, col in enumerate(cmap.colors):
@@ -265,7 +92,7 @@ def plot_loss_functions(zero_BP_layer, one_BP_layer, two_BP_layer,
 
     fig.legend(handles, labels.keys(), loc='center left')
 
-    plt.savefig('Project_3/figures/' + DATASET_CALLED +'_fig.png')
+    plt.savefig('Project_3/figures/' +DATASET_CALLED+'_fig.png')
 
 def loss_functions(estimates:np.array, actual:np.array):
         '''Calculates preiciosn and recall'''
@@ -294,24 +121,22 @@ def loss_functions(estimates:np.array, actual:np.array):
 
         recall = np.mean(all_recall)
         precision = np.mean(all_prec)
-        print((recall, precision))
+        #print((recall, precision))
         return(recall, precision)
 
 def main():
     # Creates a data process instance with accurate information from the .NAMES file
-    data = DataProcess(names=DATASET_NAMES, cat_class=True, id_col='id', missing_val='?') #<- TODO: Breast Cancer Data set
-    #data = DataProcess(names=DATASET_NAMES, cat_class=True, id_col='id') # <- TODO: Glass Dataset
-    #data = DataProcess(names=DATASET_NAMES, cat_class=True) #<- TODO: Soybean Dataset
+    data = DataProcess(names=DATASET_NAMES, cat_class=True, id_col='id', missing_val='?') #<- TODO: Must be changed with every dataset
 
     # Loads the data set, creates the tuning set, then splits into ten folds
     data.loadCSV(DATASET)
     tuning_set = data.create_tuning_set()
     folds = data.k_fold_split(10)
-    
+    population_size = [10, 20, 50, 100]
+
     #-------------------------------------------------------------------------------------
     # BACK PROPOGATION
     #-------------------------------------------------------------------------------------
-    print("------------------------BP------------------------")
     # Hyperparameters
     learning_rates = [0.001, 0.005, 0.01, 0.05, 0.1]
     batch_sizes = [2, 349] #<- TODO: Must be changed with every dataset
@@ -326,12 +151,7 @@ def main():
 
     # Performs grid search
     for i in learning_rates:
-        print('<----------->')
         for j in batch_sizes:
-            print('<><><><><><><>')
-            no_loss = []
-            one_loss = []
-            two_loss = []
             for k in folds:
                 # Creates the training and test fold. Training fold is all folds exept the one on the index.
                 # This allows for 10 experiements to be run on different data.
@@ -407,26 +227,28 @@ def main():
                 actual_one, predicted_one = one_hidden.test_data(tuning_set.to_numpy())
                 actual_two, predicted_two = two_hidden.test_data(tuning_set.to_numpy())
 
-                no_loss.append(loss_functions(predicted_zero.astype(float), actual_zero))
-                one_loss.append(loss_functions(predicted_one.astype(float), actual_one))
-                two_loss.append(loss_functions(predicted_two.astype(float), actual_two))
+                no_loss = loss_functions(predicted_zero.astype(float), actual_zero)
+                one_loss = loss_functions(predicted_one.astype(float), actual_one)
+                two_loss = loss_functions(predicted_two.astype(float), actual_two)
 
-            # If the loss(recall and precision) is better, save the hyperparameters
-            score_no = np.mean(no_loss)
-            if score_no >= best_score_no:
-                best_params_no['learning_rate'] = i
-                best_params_no['batch_size'] = j
-                best_score_no = score_no
-            score_one = np.mean(one_loss)
-            if score_one >= best_score_one:
-                best_params_one['learning_rate'] = i
-                best_params_one['batch_size'] = j
-                best_score_one = score_one
-            score_two = np.mean(two_loss)
-            if score_two >= best_score_two:
-                best_params_two['learning_rate'] = i
-                best_params_two['batch_size'] = j
-                best_score_two = score_two
+                # If the loss(recall and precision) is better, save the hyperparameters
+                score_no = np.mean(no_loss)
+                if score_no > best_score_no:
+                    best_params_no['learning_rate'] = i
+                    best_params_no['batch_size'] = j
+                    best_score_no = score_no
+
+                score_one = np.mean(one_loss)
+                if score_one > best_score_one:
+                    best_params_one['learning_rate'] = i
+                    best_params_one['batch_size'] = j
+                    best_score_one = score_one
+
+                score_two = np.mean(two_loss)
+                if score_two > best_score_two:
+                    best_params_two['learning_rate'] = i
+                    best_params_two['batch_size'] = j
+                    best_score_two = score_two
 
     # Storage for loss and recall
     no_bp_values = []
@@ -514,43 +336,35 @@ def main():
         no_bp_values.append(no_loss)
         one_bp_values.append(one_loss)
         two_bp_values.append(two_loss)
-    
+
     #-------------------------------------------------------------------------------------
     # Population is used in all the following methods, so it is only defined once
-    population_size = [10, 20, 50, 100]
     #-------------------------------------------------------------------------------------
-    
+
     #-------------------------------------------------------------------------------------
     # GENETIC ALGORITHM
     #-------------------------------------------------------------------------------------
-    print("------------------------GA------------------------")
     # Hyperparameters
     crossover_rate = [0.6, 0.7, 0.8, 0.9]
     mutation_rate = [0.05, 0.06, 0.07, 0.1]
 
     # Best Hyperparameter storage
     best_net_no = None
-    best_score_no = 0
+    best_score_no = None
     best_net_one = None
-    best_score_one = 0
+    best_score_one = None
     best_net_two = None
-    best_score_two = 0
+    best_score_two = None
 
     # Performs grid search
     for i in population_size:
-        print('<----------->')
         for j in crossover_rate:
-            print('<><><><><><><>')
             for k in mutation_rate:
-                no_loss = []
-                one_loss = []
-                two_loss = []
                 for l in folds:
                     # Creates the training and test fold. Training fold is all folds exept the one on the index.
                     # This allows for 10 experiements to be run on different data.
                     training_df = (pd.concat([x for x in folds if not (x.equals(l))], axis=0, ignore_index=True))
                     use_df = training_df.sample(n=i).to_numpy()
-
                     # Initializes the population
                     population_no_layers = []
                     population_one_layers = []
@@ -568,32 +382,22 @@ def main():
                     best_network_one, best_fitness_one = geneticAlg(population_one_layers, j, k)
                     best_network_two, best_fitness_two = geneticAlg(population_two_layers, j, k)
 
-                    # Tests on the tuning set, gets loss functions
-                    actual_zero, predicted_zero = best_network_no.test_data(tuning_set.to_numpy())
-                    actual_one, predicted_one = best_network_one.test_data(tuning_set.to_numpy())
-                    actual_two, predicted_two = best_network_two.test_data(tuning_set.to_numpy())
-                    
-                    no_loss.append(loss_functions(predicted_zero.astype(float), actual_zero))
-                    one_loss.append(loss_functions(predicted_one.astype(float), actual_one))
-                    two_loss.append(loss_functions(predicted_two.astype(float), actual_two))
-                    
+                    # Checks for the best network, by fitness score
+                    if not best_score_no or best_fitness_no > best_score_no:
+                        best_score_no = best_fitness_no
+                        best_net_no = best_network_no
+
+                    if not best_score_one or best_fitness_one > best_score_one:
+                        best_score_one = best_fitness_one
+                        best_net_one = best_network_one
+
+                    if not best_score_two or best_fitness_two > best_score_two:
+                        best_score_two = best_fitness_two
+                        best_net_two = best_network_two
+                        
                     del population_no_layers
                     del population_one_layers
                     del population_two_layers
-
-            # If the loss(recall and precision) is better, save the hyperparameters
-            score_no = np.mean(no_loss)
-            if score_no >= best_score_no:
-                best_score_no = best_fitness_no
-                best_net_no = best_network_no
-            score_one = np.mean(one_loss)
-            if score_one >= best_score_one:
-                best_score_one = best_fitness_one
-                best_net_one = best_network_one
-            score_two = np.mean(two_loss)
-            if score_two >= best_score_two:
-                best_score_two = best_fitness_two
-                best_net_two = best_network_two
 
     # Storage for loss and recall
     no_ga_values = []
@@ -613,79 +417,22 @@ def main():
         no_ga_values.append(no_loss)
         one_ga_values.append(one_loss)
         two_ga_values.append(two_loss)
-    
+
     #-------------------------------------------------------------------------------------
     # DIFFERENTIAL EVOLUTION
     #-------------------------------------------------------------------------------------
-    print("------------------------DE------------------------")
     # Hyperparameters
-    binary_crossover_rate = [0.5, 0.6, 0.7, 0.9]
-    scaling_factor = [0.1, .5, 1.5, 2]
+    scaling_factor = []
+    binary_crossover_rate = []
 
     # Best Hyperparameter storage
-    best_net_no = None
-    best_score_no = None
-    best_net_one = None
-    best_score_one = None
-    best_net_two = None
-    best_score_two = None
 
     # Performs grid search
     for i in population_size:
-        for j in binary_crossover_rate:
-            for k in scaling_factor:
-                no_loss = []
-                one_loss = []
-                two_loss = []
+        for j in scaling_factor:
+            for k in binary_crossover_rate:
                 for l in folds:
-                    # Creates the training and test fold. Training fold is all folds exept the one on the index.
-                    # This allows for 10 experiements to be run on different data.
-                    training_df = (pd.concat([x for x in folds if not (x.equals(l))], axis=0, ignore_index=True))
-                    use_df = training_df.sample(n=i).to_numpy()
-
-                    # Initializes the population
-                    population_no_layers = []
-                    population_one_layers = []
-                    population_two_layers = []
-                    for _ in range(i):
-                        population_no_layers.append(feedForwardNN_GA.FeedForwardNN(inputs= use_df, hidden_layers= 0, nodes=[],
-                                                                                    classification=DATASET_CLASS, num_of_classes=NUM_CLASSES, class_names=CLASS_NAMES))
-                        population_one_layers.append(feedForwardNN_GA.FeedForwardNN(inputs= use_df, hidden_layers= 1, nodes=[NUM_NODES[0]],
-                                                                                    classification=DATASET_CLASS, num_of_classes=NUM_CLASSES, class_names=CLASS_NAMES))
-                        population_two_layers.append(feedForwardNN_GA.FeedForwardNN(inputs= use_df, hidden_layers= 2, nodes=NUM_NODES,
-                                                                                    classification=DATASET_CLASS, num_of_classes=NUM_CLASSES, class_names=CLASS_NAMES))
-                    
-                    # Gets the initial weights
-                    best_network_no, best_fitness_no = differentialEvolution(population_no_layers, j, k)
-                    best_network_one, best_fitness_one = differentialEvolution(population_one_layers, j, k)
-                    best_network_two, best_fitness_two = differentialEvolution(population_two_layers, j, k)
-
-                    # Tests on the tuning set, gets loss functions
-                    actual_zero, predicted_zero = best_network_no.test_data(tuning_set.to_numpy())
-                    actual_one, predicted_one = best_network_one.test_data(tuning_set.to_numpy())
-                    actual_two, predicted_two = best_net_two.test_data(tuning_set.to_numpy())
-                    
-                    no_loss.append(loss_functions(predicted_zero.astype(float), actual_zero))
-                    one_loss.append(loss_functions(predicted_one.astype(float), actual_one))
-                    two_loss.append(loss_functions(predicted_two.astype(float), actual_two))
-                        
-                    del population_no_layers
-                    del population_one_layers
-                    del population_two_layers
-
-            # If the loss(recall and precision) is better, save the hyperparameters
-            score_no = np.mean(no_loss)
-            if score_no >= best_score_no:
-                best_score_no = best_fitness_no
-                best_net_no = best_network_no
-            score_one = np.mean(one_loss)
-            if score_one >= best_score_one:
-                best_score_one = best_fitness_one
-                best_net_one = best_network_one
-            score_two = np.mean(two_loss)
-            if score_two >= best_score_two:
-                best_score_two = best_fitness_two
-                best_net_two = best_network_two                    
+                    pass
     
     # Storage for loss and recall
     no_de_values = []
@@ -693,31 +440,179 @@ def main():
     two_de_values = []
 
     for i in folds:
-        # Tests on the tuning set, gets loss function
-        actual_zero, predicted_zero = best_net_no.test_data(i.to_numpy())
-        actual_one, predicted_one = best_net_one.test_data(i.to_numpy())
-        actual_two, predicted_two = best_net_two.test_data(i.to_numpy())
-        no_loss = loss_functions(predicted_zero.astype(float), actual_zero)
-        one_loss = loss_functions(predicted_one.astype(float), actual_one)
-        two_loss = loss_functions(predicted_two.astype(float), actual_two)
-
-        # Saves the loss functions across all folds
-        no_de_values.append(no_loss)
-        one_de_values.append(one_loss)
-        two_de_values.append(two_loss)
+        pass
 
     #-------------------------------------------------------------------------------------
     # PARTICLE SWARM
     #-------------------------------------------------------------------------------------
-    print("------------------------PS------------------------")
+    # Hyperparameters
+    cognitive_weight = [0.5, 1.0, 1.5, 2.0, 2.5]
+    social_weight = [0.5, 1.0, 1.5, 2.0, 2.5]
 
-    #-------------------------------------------------------------------------------------
-    # FIGURE GENERATION
-    #-------------------------------------------------------------------------------------
-    plot_loss_functions(no_bp_values, one_bp_values, two_bp_values,
-                        no_ga_values, one_ga_values, two_ga_values,
-                        no_de_values, one_de_values, two_de_values,
-                        None, None, None) # <- TODO: replace this with PSO lists of values
-    
+    # Best Hyperparameter storage
+    best_no_set = []
+    best_one_set = []
+    best_two_set = []
+    best_no_perf = 0
+    best_one_perf = 0
+    best_two_perf = 0
+
+    # Performs grid search
+    for i in population_size:
+        for j in cognitive_weight:
+            for k in social_weight:
+                print(f"Testing hyperparameter set: [{i}, {j}, {k}]")
+                time.sleep(1)
+                fold_performances_no = []
+                fold_performances_one = []
+                fold_performances_two = []
+                fold_count = 0
+                for l in folds:
+                    print(f"Fold {fold_count}")
+                    # Creates the training and test fold. Training fold is all folds exept the one on the index.
+                    # This allows for 10 experiements to be run on different data.
+                    training_df_prelim = (pd.concat([x for x in folds if not (x.equals(l))], axis=0, ignore_index=True))
+                    training_df = training_df_prelim.to_numpy()
+                    test_df = l
+
+                    inertial_weight = 1.2
+                    inertia_max = 1.2
+                    inertia_min = 0.4
+                    max_epochs = 500
+                    cognitive = j
+                    social = k
+                    population = i
+                    dataset_size = len(training_df)
+                    inputs = training_df
+                    classification = DATASET_CLASS
+                    num_of_classes = NUM_CLASSES
+                    class_names = CLASS_NAMES
+                    max_velocity = 0.5
+
+                    no_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, cognitive, social, population, dataset_size, inputs, 0, [], classification, num_of_classes, class_names, max_velocity) #0 Hidden
+                    one_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, cognitive, social, population, dataset_size, inputs, 1, [NUM_NODES[0]], classification, num_of_classes, class_names, max_velocity) #1 Hidden
+                    two_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, cognitive, social, population, dataset_size, inputs, 2, NUM_NODES, classification, num_of_classes, class_names, max_velocity) #2 Hidden
+
+                    #Initialize populations for each hidden layer number setting 
+                    no_hidden_model.initialize_population()
+                    one_hidden_model.initialize_population()
+                    two_hidden_model.initialize_population()
+
+                    #Train the populations on the training set
+                    no_hidden_model.swarm()
+                    print("-------------------------------------")
+                    one_hidden_model.swarm()
+                    print("-------------------------------------")
+                    two_hidden_model.swarm()
+                    print("-------------------------------------")
+
+                    #Select the best model from each population
+                    best_no = no_hidden_model.select_model()
+                    best_one = one_hidden_model.select_model()
+                    best_two = two_hidden_model.select_model()
+
+                    #Test the best models on the tuning set (changes on each iteration)
+                    actual_no, predicted_no = best_no.test_data(test_df)
+                    actual_one, predicted_one = best_one.test_data(test_df)
+                    actual_two, predicted_two = best_two.test_data(test_df)
+                    print("Zero Hidden Loss:", end=" ")
+                    no_loss = loss_functions(predicted_no.astype(float), actual_no)
+                    print("One Hidden Loss:", end=" ")
+                    one_loss = loss_functions(predicted_one.astype(float), actual_one)
+                    print("Two Hidden Loss:", end=" ")
+                    two_loss = loss_functions(predicted_two.astype(float), actual_two)
+
+                    fold_performances_no.append(np.mean(no_loss))
+                    fold_performances_one.append(np.mean(one_loss))
+                    fold_performances_two.append(np.mean(two_loss))
+                    fold_count += 1
+
+                if(np.mean(fold_performances_no) > best_no_perf):
+                    best_no_set = [i, j, k]
+                    best_no_perf = np.mean(fold_performances_no)
+                if(np.mean(fold_performances_one) > best_one_perf):
+                    best_one_set = [i, j, k]
+                    best_one_perf = np.mean(fold_performances_one)
+                if(np.mean(fold_performances_two) > best_two_perf):
+                    best_two_set = [i, j, k]
+                    best_two_perf = np.mean(fold_performances_two)
+
+    print(f"Optimal Hyperparameters Zero: {best_no_set}")
+    print(f"Optimal Hyperparameters One: {best_one_set}")
+    print(f"Optimal Hyperparameters Two: {best_two_set}")
+
+    #Real test
+    fold_performances_no = []
+    fold_performances_one = []
+    fold_performances_two = []
+    fold_count = 0
+    for l in folds:
+        print(f"Fold {fold_count}")
+        # Creates the training and test fold. Training fold is all folds exept the one on the index.
+        # This allows for 10 experiements to be run on different data.
+        training_df_prelim = (pd.concat([x for x in folds if not (x.equals(l))], axis=0, ignore_index=True))
+        training_df = training_df_prelim.to_numpy()
+        test_df = l
+
+        inertial_weight = 1.2
+        inertia_max = 1.2
+        inertia_min = 0.4
+        max_epochs = 500
+        dataset_size = len(training_df)
+        inputs = training_df
+        classification = DATASET_CLASS
+        num_of_classes = NUM_CLASSES
+        class_names = CLASS_NAMES
+        max_velocity = 0.5
+
+        no_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, best_no_set[1], best_no_set[2], best_no_set[0], dataset_size, inputs, 0, [], classification, num_of_classes, class_names, max_velocity) #0 Hidden
+        one_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, best_one_set[1], best_one_set[2], best_one_set[0], dataset_size, inputs, 1, [NUM_NODES[0]], classification, num_of_classes, class_names, max_velocity) #1 Hidden
+        two_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, best_two_set[1], best_two_set[2], best_two_set[0], dataset_size, inputs, 2, NUM_NODES, classification, num_of_classes, class_names, max_velocity) #2 Hidden
+
+        #Initialize populations for each hidden layer number setting 
+        no_hidden_model.initialize_population()
+        one_hidden_model.initialize_population()
+        two_hidden_model.initialize_population()
+
+        #Train the populations on the training set
+        no_hidden_model.swarm()
+        print("-------------------------------------")
+        one_hidden_model.swarm()
+        print("-------------------------------------")
+        two_hidden_model.swarm()
+        print("-------------------------------------")
+
+        #Select the best model from each population
+        best_no = no_hidden_model.select_model()
+        best_one = one_hidden_model.select_model()
+        best_two = two_hidden_model.select_model()
+
+        #Test the best models on the tuning set (changes on each iteration)
+        actual_no, predicted_no = best_no.test_data(test_df)
+        actual_one, predicted_one = best_one.test_data(test_df)
+        actual_two, predicted_two = best_two.test_data(test_df)
+        print("Zero Hidden Loss:", end=" ")
+        no_loss = loss_functions(predicted_no.astype(float), actual_no)
+        print("One Hidden Loss:", end=" ")
+        one_loss = loss_functions(predicted_one.astype(float), actual_one)
+        print("Two Hidden Loss:", end=" ")
+        two_loss = loss_functions(predicted_two.astype(float), actual_two)
+
+        fold_performances_no.append(np.mean(no_loss))
+        fold_performances_one.append(np.mean(one_loss))
+        fold_performances_two.append(np.mean(two_loss))
+        fold_count += 1
+
+    mean_no = np.mean(fold_performances_no)
+    mean_one = np.mean(fold_performances_one)
+    mean_two = np.mean(fold_performances_two)
+
+    print(f"Zero Hidden Layers Final Performance {mean_no}")
+    print(f"One Hidden Layer Final Performance {mean_one}")
+    print(f"Two Hidden Layers Final Performance {mean_two}")
+        
+
+
+              
 if __name__ == '__main__':
     main()
