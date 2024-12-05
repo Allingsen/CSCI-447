@@ -155,7 +155,7 @@ def main():
     data.loadCSV(DATASET)
     tuning_set = data.create_tuning_set()
     folds = data.reg_k_fold_split(10)
-    '''
+    
     #-------------------------------------------------------------------------------------
     # BACK PROPOGATION
     #-------------------------------------------------------------------------------------
@@ -355,12 +355,12 @@ def main():
         no_bp_values.append(no_loss)
         one_bp_values.append(one_loss)
         two_bp_values.append(two_loss)
-    '''
+    
     #-------------------------------------------------------------------------------------
     # Population is used in all the following methods, so it is only defined once
     population_size = [10, 20, 50, 100]
     #-------------------------------------------------------------------------------------
-    '''
+    
     #-------------------------------------------------------------------------------------
     # GENETIC ALGORITHM
     #-------------------------------------------------------------------------------------
@@ -453,7 +453,7 @@ def main():
         no_ga_values.append(no_loss)
         one_ga_values.append(one_loss)
         two_ga_values.append(two_loss)
-    '''
+    
     #-------------------------------------------------------------------------------------
     # DIFFERENTIAL EVOLUTION
     #-------------------------------------------------------------------------------------
@@ -615,9 +615,9 @@ def main():
                     best_two = two_hidden_model.select_model()
 
                     #Test the best models on the tuning set (changes on each iteration)
-                    actual_no, predicted_no = best_no.test_data(test_df)
-                    actual_one, predicted_one = best_one.test_data(test_df)
-                    actual_two, predicted_two = best_two.test_data(test_df)
+                    actual_no, predicted_no = best_no.test_data(test_df.to_numpy())
+                    actual_one, predicted_one = best_one.test_data(test_df.to_numpy())
+                    actual_two, predicted_two = best_two.test_data(test_df.to_numpy())
                     print("Zero Hidden Loss:", end=" ")
                     no_loss = loss_functions(predicted_no.astype(float), actual_no)
                     print("One Hidden Loss:", end=" ")
@@ -689,9 +689,9 @@ def main():
         best_two = two_hidden_model.select_model()
 
         #Test the best models on the tuning set (changes on each iteration)
-        actual_no, predicted_no = best_no.test_data(test_df)
-        actual_one, predicted_one = best_one.test_data(test_df)
-        actual_two, predicted_two = best_two.test_data(test_df)
+        actual_no, predicted_no = best_no.test_data(test_df.to_numpy())
+        actual_one, predicted_one = best_one.test_data(test_df.to_numpy())
+        actual_two, predicted_two = best_two.test_data(test_df.to_numpy())
         print("Zero Hidden Loss:", end=" ")
         no_loss = loss_functions(predicted_no.astype(float), actual_no)
         print("One Hidden Loss:", end=" ")
