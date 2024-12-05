@@ -4,12 +4,14 @@ import matplotlib.pyplot as plt
 from dataProcess import DataProcess
 from geneticAlgorithm import geneticAlg
 from differentialEvolution import differentialEvolution
+from ParticleSwarm import ParticleSwarm
 import feedForwardNN_GA
 import feedForwardNN
+import time
 
 # Breast Cancer Dataset
 DATASET_CALLED = 'breast-cancer'
-DATASET = 'datasets/breast-cancer-wisconsin.data'
+DATASET = 'Project_4/datasets/breast-cancer-wisconsin.data'
 DATASET_NAMES = ['id', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'class']
 CLASS_NAMES = ['2', '4']
 NUM_CLASSES = len(CLASS_NAMES)
@@ -326,9 +328,8 @@ def main():
 
     # Performs grid search
     for i in learning_rates:
-        print('<----------->')
         for j in batch_sizes:
-            print('<><><><><><><>')
+            print(f"Testing hyperparameter set: [{i}, {j}]")
             no_loss = []
             one_loss = []
             two_loss = []
@@ -538,10 +539,9 @@ def main():
 
     # Performs grid search
     for i in population_size:
-        print('<----------->')
         for j in crossover_rate:
-            print('<><><><><><><>')
             for k in mutation_rate:
+                print(f"Testing hyperparameter set: [{i}, {j}, {k}]")
                 no_loss = []
                 one_loss = []
                 two_loss = []
@@ -634,6 +634,7 @@ def main():
     for i in population_size:
         for j in binary_crossover_rate:
             for k in scaling_factor:
+                print(f"Testing hyperparameter set: [{i}, {j}, {k}]")
                 no_loss = []
                 one_loss = []
                 two_loss = []
@@ -710,6 +711,170 @@ def main():
     # PARTICLE SWARM
     #-------------------------------------------------------------------------------------
     print("------------------------PS------------------------")
+    cognitive_weight = [0.5, 1.0, 1.5, 2.0, 2.5]
+    social_weight = [0.5, 1.0, 1.5, 2.0, 2.5]
+
+    # Best Hyperparameter storage
+    best_no_set = []
+    best_one_set = []
+    best_two_set = []
+    best_no_perf = 0
+    best_one_perf = 0
+    best_two_perf = 0
+
+    # Performs grid search
+    for i in population_size:
+        for j in cognitive_weight:
+            for k in social_weight:
+                print(f"Testing hyperparameter set: [{i}, {j}, {k}]")
+                time.sleep(1)
+                fold_performances_no = []
+                fold_performances_one = []
+                fold_performances_two = []
+                fold_count = 0
+                for l in folds:
+                    print(f"Fold {fold_count}")
+                    # Creates the training and test fold. Training fold is all folds exept the one on the index.
+                    # This allows for 10 experiements to be run on different data.
+                    training_df_prelim = (pd.concat([x for x in folds if not (x.equals(l))], axis=0, ignore_index=True))
+                    training_df = training_df_prelim.to_numpy()
+                    test_df = l
+
+                    inertial_weight = 1.2
+                    inertia_max = 1.2
+                    inertia_min = 0.4
+                    max_epochs = 500
+                    cognitive = j
+                    social = k
+                    population = i
+                    dataset_size = len(training_df)
+                    inputs = training_df
+                    classification = DATASET_CLASS
+                    num_of_classes = NUM_CLASSES
+                    class_names = CLASS_NAMES
+                    max_velocity = 0.5
+
+                    no_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, cognitive, social, population, dataset_size, inputs, 0, [], classification, num_of_classes, class_names, max_velocity) #0 Hidden
+                    one_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, cognitive, social, population, dataset_size, inputs, 1, [NUM_NODES[0]], classification, num_of_classes, class_names, max_velocity) #1 Hidden
+                    two_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, cognitive, social, population, dataset_size, inputs, 2, NUM_NODES, classification, num_of_classes, class_names, max_velocity) #2 Hidden
+
+                    #Initialize populations for each hidden layer number setting 
+                    no_hidden_model.initialize_population()
+                    one_hidden_model.initialize_population()
+                    two_hidden_model.initialize_population()
+
+                    #Train the populations on the training set
+                    no_hidden_model.swarm()
+                    print("-------------------------------------")
+                    one_hidden_model.swarm()
+                    print("-------------------------------------")
+                    two_hidden_model.swarm()
+                    print("-------------------------------------")
+
+                    #Select the best model from each population
+                    best_no = no_hidden_model.select_model()
+                    best_one = one_hidden_model.select_model()
+                    best_two = two_hidden_model.select_model()
+
+                    #Test the best models on the tuning set (changes on each iteration)
+                    actual_no, predicted_no = best_no.test_data(test_df)
+                    actual_one, predicted_one = best_one.test_data(test_df)
+                    actual_two, predicted_two = best_two.test_data(test_df)
+                    print("Zero Hidden Loss:", end=" ")
+                    no_loss = loss_functions(predicted_no.astype(float), actual_no)
+                    print("One Hidden Loss:", end=" ")
+                    one_loss = loss_functions(predicted_one.astype(float), actual_one)
+                    print("Two Hidden Loss:", end=" ")
+                    two_loss = loss_functions(predicted_two.astype(float), actual_two)
+
+                    fold_performances_no.append(np.mean(no_loss))
+                    fold_performances_one.append(np.mean(one_loss))
+                    fold_performances_two.append(np.mean(two_loss))
+                    fold_count += 1
+
+                if(np.mean(fold_performances_no) > best_no_perf):
+                    best_no_set = [i, j, k]
+                    best_no_perf = np.mean(fold_performances_no)
+                if(np.mean(fold_performances_one) > best_one_perf):
+                    best_one_set = [i, j, k]
+                    best_one_perf = np.mean(fold_performances_one)
+                if(np.mean(fold_performances_two) > best_two_perf):
+                    best_two_set = [i, j, k]
+                    best_two_perf = np.mean(fold_performances_two)
+
+    print(f"Optimal Hyperparameters Zero: {best_no_set}")
+    print(f"Optimal Hyperparameters One: {best_one_set}")
+    print(f"Optimal Hyperparameters Two: {best_two_set}")
+
+    #Real test
+    fold_performances_no = []
+    fold_performances_one = []
+    fold_performances_two = []
+    fold_count = 0
+    for l in folds:
+        print(f"Fold {fold_count}")
+        # Creates the training and test fold. Training fold is all folds exept the one on the index.
+        # This allows for 10 experiements to be run on different data.
+        training_df_prelim = (pd.concat([x for x in folds if not (x.equals(l))], axis=0, ignore_index=True))
+        training_df = training_df_prelim.to_numpy()
+        test_df = l
+
+        inertial_weight = 1.2
+        inertia_max = 1.2
+        inertia_min = 0.4
+        max_epochs = 500
+        dataset_size = len(training_df)
+        inputs = training_df
+        classification = DATASET_CLASS
+        num_of_classes = NUM_CLASSES
+        class_names = CLASS_NAMES
+        max_velocity = 0.5
+
+        no_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, best_no_set[1], best_no_set[2], best_no_set[0], dataset_size, inputs, 0, [], classification, num_of_classes, class_names, max_velocity) #0 Hidden
+        one_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, best_one_set[1], best_one_set[2], best_one_set[0], dataset_size, inputs, 1, [NUM_NODES[0]], classification, num_of_classes, class_names, max_velocity) #1 Hidden
+        two_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, best_two_set[1], best_two_set[2], best_two_set[0], dataset_size, inputs, 2, NUM_NODES, classification, num_of_classes, class_names, max_velocity) #2 Hidden
+
+        #Initialize populations for each hidden layer number setting 
+        no_hidden_model.initialize_population()
+        one_hidden_model.initialize_population()
+        two_hidden_model.initialize_population()
+
+        #Train the populations on the training set
+        no_hidden_model.swarm()
+        print("-------------------------------------")
+        one_hidden_model.swarm()
+        print("-------------------------------------")
+        two_hidden_model.swarm()
+        print("-------------------------------------")
+
+        #Select the best model from each population
+        best_no = no_hidden_model.select_model()
+        best_one = one_hidden_model.select_model()
+        best_two = two_hidden_model.select_model()
+
+        #Test the best models on the tuning set (changes on each iteration)
+        actual_no, predicted_no = best_no.test_data(test_df)
+        actual_one, predicted_one = best_one.test_data(test_df)
+        actual_two, predicted_two = best_two.test_data(test_df)
+        print("Zero Hidden Loss:", end=" ")
+        no_loss = loss_functions(predicted_no.astype(float), actual_no)
+        print("One Hidden Loss:", end=" ")
+        one_loss = loss_functions(predicted_one.astype(float), actual_one)
+        print("Two Hidden Loss:", end=" ")
+        two_loss = loss_functions(predicted_two.astype(float), actual_two)
+
+        fold_performances_no.append(no_loss)
+        fold_performances_one.append(one_loss)
+        fold_performances_two.append(two_loss)
+        fold_count += 1
+
+    mean_no = np.mean(fold_performances_no)
+    mean_one = np.mean(fold_performances_one)
+    mean_two = np.mean(fold_performances_two)
+
+    print(f"Zero Hidden Layers Final Performance {mean_no}")
+    print(f"One Hidden Layer Final Performance {mean_one}")
+    print(f"Two Hidden Layers Final Performance {mean_two}")
 
     #-------------------------------------------------------------------------------------
     # FIGURE GENERATION
@@ -717,7 +882,7 @@ def main():
     plot_loss_functions(no_bp_values, one_bp_values, two_bp_values,
                         no_ga_values, one_ga_values, two_ga_values,
                         no_de_values, one_de_values, two_de_values,
-                        None, None, None) # <- TODO: replace this with PSO lists of values
+                        fold_performances_no, fold_performances_one, fold_performances_two) # <- TODO: replace this with PSO lists of values
     
 if __name__ == '__main__':
     main()

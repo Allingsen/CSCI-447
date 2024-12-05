@@ -118,7 +118,15 @@ class DataProcess():
         # If there is an ID column, remove it
         if self.id_col:
             self.df.drop(self.id_col, axis=1, inplace=True)
-            self.cols.remove(self.id_col)
+            if type(self.id_col) == list:
+                for i in self.id_col:
+                    if i in self.categorical_cols:
+                        self.categorical_cols.remove(i)
+                    self.cols.remove(i)
+            else:
+                if self.id_col in self.categorical_cols:
+                    self.categorical_cols.remove(self.id_col)
+                self.cols.remove(self.id_col)
         
         #self.df.drop('model', axis=1, inplace=True)
         columns = [x for x in self.categorical_cols if x != 'class']
