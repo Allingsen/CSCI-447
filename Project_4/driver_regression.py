@@ -577,13 +577,13 @@ def main():
                     # Creates the training and test fold. Training fold is all folds exept the one on the index.
                     # This allows for 10 experiements to be run on different data.
                     training_df_prelim = (pd.concat([x for x in folds if not (x.equals(l))], axis=0, ignore_index=True))
-                    training_df = training_df_prelim.to_numpy()
+                    training_df = training_df_prelim.sample(n=i).to_numpy()
                     test_df = l
 
                     inertial_weight = 1.2
                     inertia_max = 1.2
                     inertia_min = 0.4
-                    max_epochs = 500
+                    max_epochs = 100
                     cognitive = j
                     social = k
                     population = i
@@ -654,13 +654,13 @@ def main():
         # Creates the training and test fold. Training fold is all folds exept the one on the index.
         # This allows for 10 experiements to be run on different data.
         training_df_prelim = (pd.concat([x for x in folds if not (x.equals(l))], axis=0, ignore_index=True))
-        training_df = training_df_prelim.to_numpy()
+        training_df = training_df_prelim.sample(n=i).to_numpy()
         test_df = l
 
         inertial_weight = 1.2
         inertia_max = 1.2
         inertia_min = 0.4
-        max_epochs = 500
+        max_epochs = 100
         dataset_size = len(training_df)
         inputs = training_df
         classification = DATASET_CLASS
