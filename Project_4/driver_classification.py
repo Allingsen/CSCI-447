@@ -613,7 +613,7 @@ def main():
         no_ga_values.append(no_loss)
         one_ga_values.append(one_loss)
         two_ga_values.append(two_loss)
-    
+
     #-------------------------------------------------------------------------------------
     # DIFFERENTIAL EVOLUTION
     #-------------------------------------------------------------------------------------
@@ -624,11 +624,11 @@ def main():
 
     # Best Hyperparameter storage
     best_net_no = None
-    best_score_no = None
+    best_score_no = 0
     best_net_one = None
-    best_score_one = None
+    best_score_one = 0
     best_net_two = None
-    best_score_two = None
+    best_score_two = 0
 
     # Performs grid search
     for i in population_size:
@@ -664,7 +664,7 @@ def main():
                     # Tests on the tuning set, gets loss functions
                     actual_zero, predicted_zero = best_network_no.test_data(tuning_set.to_numpy())
                     actual_one, predicted_one = best_network_one.test_data(tuning_set.to_numpy())
-                    actual_two, predicted_two = best_net_two.test_data(tuning_set.to_numpy())
+                    actual_two, predicted_two = best_network_two.test_data(tuning_set.to_numpy())
                     
                     no_loss.append(loss_functions(predicted_zero.astype(float), actual_zero))
                     one_loss.append(loss_functions(predicted_one.astype(float), actual_one))

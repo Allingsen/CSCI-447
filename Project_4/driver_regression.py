@@ -10,11 +10,11 @@ import feedForwardNN
 import time
 
 # Forest Fires Data Set
-#DATASET_CALLED = 'forestfires'
-#DATASET = 'Project_4/datasets/forestfires.data'
-#DATASET_NAMES = ['x', 'y', 'month', 'day', 'ffmc', 'dmc', 'dc', 'isi', 'temp', 'rh', 'wind', 'rain', 'class']
-#DATASET_CLASS = False
-#NUM_NODES = [7,7]
+DATASET_CALLED = 'forestfires'
+DATASET = 'Project_4/datasets/forestfires.data'
+DATASET_NAMES = ['x', 'y', 'month', 'day', 'ffmc', 'dmc', 'dc', 'isi', 'temp', 'rh', 'wind', 'rain', 'class']
+DATASET_CLASS = False
+NUM_NODES = [7,7]
 
 # Abalone Dataset
 #DATASET_CALLED = 'abalone'
@@ -24,11 +24,11 @@ import time
 #NUM_NODES = [5,5]
 
 # Machine Dataset
-DATASET_CALLED = 'machine'
-DATASET = 'Project_4/datasets/machine.data'
-DATASET_NAMES = ['id', 'model', 'myct', 'mmin', 'mmax', 'cach', 'chmin', 'chmax', 'prp', 'class']
-DATASET_CLASS = False
-NUM_NODES = [6,6]
+#DATASET_CALLED = 'machine'
+#DATASET = 'Project_4/datasets/machine.data'
+#DATASET_NAMES = ['id', 'model', 'myct', 'mmin', 'mmax', 'cach', 'chmin', 'chmax', 'prp', 'class']
+#DATASET_CLASS = False
+#NUM_NODES = [6,6]
 
 def plot_loss_functions(zero_BP_layer, one_BP_layer, two_BP_layer,
                         zero_GA_layer, one_GA_layer, two_GA_layer,
@@ -148,14 +148,14 @@ def loss_functions(estimates:np.array, actual:np.array):
 
 def main():
     # Creates a data process instance with accurate information from the .NAMES file
-    #data = DataProcess(names=DATASET_NAMES,cat_class=False,regression=True) # <- TODO: Abalone and Forest Fire Dataset
-    data = DataProcess(names=DATASET_NAMES,cat_class=False,regression=True, id_col=['id', 'model'])
+    data = DataProcess(names=DATASET_NAMES,cat_class=False,regression=True) # <- TODO: Abalone and Forest Fire Dataset
+    #data = DataProcess(names=DATASET_NAMES,cat_class=False,regression=True, id_col=['id', 'model'])
 
     # Loads the data set, creates the tuning set, then splits into ten folds
     data.loadCSV(DATASET)
     tuning_set = data.create_tuning_set()
     folds = data.reg_k_fold_split(10)
-    
+    '''
     #-------------------------------------------------------------------------------------
     # BACK PROPOGATION
     #-------------------------------------------------------------------------------------
@@ -355,12 +355,12 @@ def main():
         no_bp_values.append(no_loss)
         one_bp_values.append(one_loss)
         two_bp_values.append(two_loss)
-    
+    '''
     #-------------------------------------------------------------------------------------
     # Population is used in all the following methods, so it is only defined once
     population_size = [10, 20, 50, 100]
     #-------------------------------------------------------------------------------------
-    
+    '''
     #-------------------------------------------------------------------------------------
     # GENETIC ALGORITHM
     #-------------------------------------------------------------------------------------
@@ -453,7 +453,7 @@ def main():
         no_ga_values.append(no_loss)
         one_ga_values.append(one_loss)
         two_ga_values.append(two_loss)
-    
+    '''
     #-------------------------------------------------------------------------------------
     # DIFFERENTIAL EVOLUTION
     #-------------------------------------------------------------------------------------
@@ -464,11 +464,11 @@ def main():
 
     # Best Hyperparameter storage
     best_net_no = None
-    best_score_no = None
+    best_score_no = 0
     best_net_one = None
-    best_score_one = None
+    best_score_one = 0
     best_net_two = None
-    best_score_two = None
+    best_score_two = 0
 
     # Performs grid search
     for i in population_size:
@@ -504,7 +504,7 @@ def main():
                     # Tests on the tuning set, gets loss functions
                     actual_zero, predicted_zero = best_network_no.test_data(tuning_set.to_numpy())
                     actual_one, predicted_one = best_network_one.test_data(tuning_set.to_numpy())
-                    actual_two, predicted_two = best_net_two.test_data(tuning_set.to_numpy())
+                    actual_two, predicted_two = best_network_two.test_data(tuning_set.to_numpy())
                     
                     no_loss.append(loss_functions(predicted_zero.astype(float), actual_zero))
                     one_loss.append(loss_functions(predicted_one.astype(float), actual_one))
