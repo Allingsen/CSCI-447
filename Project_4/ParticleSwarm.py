@@ -1,4 +1,3 @@
-
 #Hyperparameters: cognitive weight, social weight, population size
 from NeuralNetworkPSO import NeuralNetworkPSO
 import numpy as np
