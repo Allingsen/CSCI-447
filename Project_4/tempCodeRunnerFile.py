@@ -1,2 +1,1 @@
-e)
-        return mse
+exit()

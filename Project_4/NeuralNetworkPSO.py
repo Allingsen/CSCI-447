@@ -155,7 +155,7 @@ class NeuralNetworkPSO():
             all_actual[no] = i[-1]
             all_pred[no] = predicted_val[counter]
             counter += 1
-            # If the minibatch has been iterated through, perform backprop
+            # If the minibatch has been iterated through
             if counter == self.batch_size:             
                 probabilities_list = output_layer.get_probabilities()
                 error_signal = self.error_signal(predicted_val, actual_val, probabilities_list)

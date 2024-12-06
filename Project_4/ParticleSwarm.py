@@ -47,7 +47,6 @@ class ParticleSwarm():
 
         #While the positions of each network change by greater than 0.1%...
         while(not converged):
-            print(f"EPOCH {self.epoch}")
             fitnesses = {}
             old_positions = []
             new_positions = []

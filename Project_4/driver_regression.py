@@ -161,8 +161,8 @@ def main():
     #-------------------------------------------------------------------------------------
     print("------------------------BP------------------------")
     # Hyperparameters
-    learning_rates = [0.001, 0.005, 0.01, 0.05, 0.1]
-    batch_sizes = [12, 43, 86, 129] #<- TODO: Must be changed with every dataset
+    learning_rates = [0.005, 0.01, 0.05, 0.1]
+    batch_sizes = [12, 43] #<- TODO: Must be changed with every dataset
 
     # Best Hyperparameter storage
     best_params_no = {}
@@ -358,7 +358,8 @@ def main():
     
     #-------------------------------------------------------------------------------------
     # Population is used in all the following methods, so it is only defined once
-    population_size = [10, 20, 50, 100]
+    population_size = [4, 6, 10, 16]
+    
     #-------------------------------------------------------------------------------------
     
     #-------------------------------------------------------------------------------------
@@ -371,11 +372,11 @@ def main():
 
     # Best Hyperparameter storage
     best_net_no = None
-    best_score_no = 0
+    best_score_no = 100
     best_net_one = None
-    best_score_one = 0
+    best_score_one = 100
     best_net_two = None
-    best_score_two = 0
+    best_score_two = 100
 
     # Performs grid search
     for i in population_size:
@@ -439,7 +440,7 @@ def main():
     no_ga_values = []
     one_ga_values = []
     two_ga_values = []
-
+    print('------')
     for i in folds:
         # Tests on the tuning set, gets loss function
         actual_zero, predicted_zero = best_net_no.test_data(i.to_numpy())
@@ -464,11 +465,11 @@ def main():
 
     # Best Hyperparameter storage
     best_net_no = None
-    best_score_no = 0
+    best_score_no = 100
     best_net_one = None
-    best_score_one = 0
+    best_score_one = 100
     best_net_two = None
-    best_score_two = 0
+    best_score_two = 100
 
     # Performs grid search
     for i in population_size:
@@ -532,7 +533,7 @@ def main():
     no_de_values = []
     one_de_values = []
     two_de_values = []
-
+    print('------')
     for i in folds:
         # Tests on the tuning set, gets loss function
         actual_zero, predicted_zero = best_net_no.test_data(i.to_numpy())
@@ -546,13 +547,13 @@ def main():
         no_de_values.append(no_loss)
         one_de_values.append(one_loss)
         two_de_values.append(two_loss)
-
+    
     #-------------------------------------------------------------------------------------
     # PARTICLE SWARM
     #-------------------------------------------------------------------------------------
     print("------------------------PS------------------------")
-    cognitive_weight = [0.5, 1.0, 1.5, 2.0, 2.5]
-    social_weight = [0.5, 1.0, 1.5, 2.0, 2.5]
+    cognitive_weight = [0.5, 1.0, 1.5, 2.0]
+    social_weight = [0.5, 1.0, 1.5, 2.0]
 
     # Best Hyperparameter storage
     best_no_set = []
@@ -592,9 +593,9 @@ def main():
                     classification = DATASET_CLASS
                     max_velocity = 0.5
 
-                    no_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, cognitive, social, population, dataset_size, inputs, 0, [], classification, max_velocity) #0 Hidden
-                    one_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, cognitive, social, population, dataset_size, inputs, 1, [NUM_NODES[0]], classification, max_velocity) #1 Hidden
-                    two_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, cognitive, social, population, dataset_size, inputs, 2, NUM_NODES, classification, max_velocity) #2 Hidden
+                    no_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, cognitive, social, population, dataset_size, inputs, 0, [], classification, 1, None, max_velocity) #0 Hidden
+                    one_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, cognitive, social, population, dataset_size, inputs, 1, [NUM_NODES[0]], classification,1, None, max_velocity) #1 Hidden
+                    two_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, cognitive, social, population, dataset_size, inputs, 2, NUM_NODES, classification,1, None, max_velocity) #2 Hidden
 
                     #Initialize populations for each hidden layer number setting 
                     no_hidden_model.initialize_population()
@@ -666,9 +667,9 @@ def main():
         classification = DATASET_CLASS
         max_velocity = 0.5
 
-        no_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, best_no_set[1], best_no_set[2], best_no_set[0], dataset_size, inputs, 0, [], classification, max_velocity) #0 Hidden
-        one_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, best_one_set[1], best_one_set[2], best_one_set[0], dataset_size, inputs, 1, [NUM_NODES[0]], classification, max_velocity) #1 Hidden
-        two_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, best_two_set[1], best_two_set[2], best_two_set[0], dataset_size, inputs, 2, NUM_NODES, classification, max_velocity) #2 Hidden
+        no_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, best_no_set[1], best_no_set[2], best_no_set[0], dataset_size, inputs, 0, [], classification,1, None, max_velocity) #0 Hidden
+        one_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, best_one_set[1], best_one_set[2], best_one_set[0], dataset_size, inputs, 1, [NUM_NODES[0]], classification, 1, None, max_velocity) #1 Hidden
+        two_hidden_model = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, best_two_set[1], best_two_set[2], best_two_set[0], dataset_size, inputs, 2, NUM_NODES, classification,1, None, max_velocity) #2 Hidden
 
         #Initialize populations for each hidden layer number setting 
         no_hidden_model.initialize_population()

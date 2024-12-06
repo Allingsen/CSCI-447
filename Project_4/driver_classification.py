@@ -10,27 +10,27 @@ import feedForwardNN
 import time
 
 # Breast Cancer Dataset
-DATASET_CALLED = 'breast-cancer'
-DATASET = 'Project_4/datasets/breast-cancer-wisconsin.data'
-DATASET_NAMES = ['id', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'class']
-CLASS_NAMES = ['2', '4']
-NUM_CLASSES = len(CLASS_NAMES)
-NUM_NODES = [4,4]
-DATASET_CLASS = True
-
-# Glass Dataset
-#DATASET_CALLED = 'glass'
-#DATASET = 'datasets/glass.data'
-#DATASET_NAMES = ['id', 'RI', 'Na', 'Mg', 'Al', 'Si', 'K', 'Ca', 'Ba', 'Fe', 'class']
-#CLASS_NAMES = ['1', '2', '3', '5', '6', '7']
+#DATASET_CALLED = 'breast-cancer'
+#DATASET = 'Project_4/datasets/breast-cancer-wisconsin.data'
+#DATASET_NAMES = ['id', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'class']
+#CLASS_NAMES = ['2', '4']
 #NUM_CLASSES = len(CLASS_NAMES)
-#NUM_NODES = [6, 6]
+#NUM_NODES = [4,4]
 #DATASET_CLASS = True
 
+# Glass Dataset
+DATASET_CALLED = 'glass'
+DATASET = 'Project_4/datasets/glass.data'
+DATASET_NAMES = ['id', 'RI', 'Na', 'Mg', 'Al', 'Si', 'K', 'Ca', 'Ba', 'Fe', 'class']
+CLASS_NAMES = ['1', '2', '3', '5', '6', '7']
+NUM_CLASSES = len(CLASS_NAMES)
+NUM_NODES = [6, 6]
+DATASET_CLASS = True
+
 # Soybean Dataset
-# TODO: WHEN WORKING WITH SOYBEAN, FIND AND DELETE ALL INSTANCES OF .astype(float)
+# TODO: WHEN WORKING WITH SOYBEAN, FIND AND DELETE ALL INSTANCES OF 
 #DATASET_CALLED = 'soybean'
-#DATASET = 'datasets/soybean-small.data'
+#DATASET = 'Project_4/datasets/soybean-small.data'
 #DATASET_NAMES = [*range(35)] + ['class']
 #CLASS_NAMES = ['D1', 'D2', 'D3', 'D4']
 #NUM_CLASSES = len(CLASS_NAMES)
@@ -267,7 +267,7 @@ def plot_loss_functions(zero_BP_layer, one_BP_layer, two_BP_layer,
 
     fig.legend(handles, labels.keys(), loc='center left')
 
-    plt.savefig('Project_3/figures/' + DATASET_CALLED +'_fig.png')
+    plt.savefig('Project_4/figures/' + DATASET_CALLED +'_fig.png')
 
 def loss_functions(estimates:np.array, actual:np.array):
         '''Calculates preiciosn and recall'''
@@ -301,9 +301,9 @@ def loss_functions(estimates:np.array, actual:np.array):
 
 def main():
     # Creates a data process instance with accurate information from the .NAMES file
-    data = DataProcess(names=DATASET_NAMES, cat_class=True, id_col='id', missing_val='?') #<- TODO: Breast Cancer Data set
+    #data = DataProcess(names=DATASET_NAMES, cat_class=True, id_col='id', missing_val='?') #<- TODO: Breast Cancer Data set
     #data = DataProcess(names=DATASET_NAMES, cat_class=True, id_col='id') # <- TODO: Glass Dataset
-    #data = DataProcess(names=DATASET_NAMES, cat_class=True) #<- TODO: Soybean Dataset
+    data = DataProcess(names=DATASET_NAMES, cat_class=True) #<- TODO: Soybean Dataset
 
     # Loads the data set, creates the tuning set, then splits into ten folds
     data.loadCSV(DATASET)
@@ -316,7 +316,7 @@ def main():
     print("------------------------BP------------------------")
     # Hyperparameters
     learning_rates = [0.001, 0.005, 0.01, 0.05, 0.1]
-    batch_sizes = [2, 349] #<- TODO: Must be changed with every dataset
+    batch_sizes = [107] #<- TODO: Must be changed with every dataset
 
     # Best Hyperparameter storage
     best_params_no = {}
@@ -507,6 +507,7 @@ def main():
         actual_zero, predicted_zero = no_hidden.test_data(i.to_numpy())
         actual_one, predicted_one = one_hidden.test_data(i.to_numpy())
         actual_two, predicted_two = two_hidden.test_data(i.to_numpy())
+        print('---------')
         no_loss = loss_functions(predicted_zero.astype(float), actual_zero)
         one_loss = loss_functions(predicted_one.astype(float), actual_one)
         two_loss = loss_functions(predicted_two.astype(float), actual_two)
@@ -518,7 +519,7 @@ def main():
     
     #-------------------------------------------------------------------------------------
     # Population is used in all the following methods, so it is only defined once
-    population_size = [10, 20, 50, 100]
+    population_size = [4, 6, 10, 16]
     #-------------------------------------------------------------------------------------
     
     #-------------------------------------------------------------------------------------
@@ -613,7 +614,7 @@ def main():
         no_ga_values.append(no_loss)
         one_ga_values.append(one_loss)
         two_ga_values.append(two_loss)
-
+    
     #-------------------------------------------------------------------------------------
     # DIFFERENTIAL EVOLUTION
     #-------------------------------------------------------------------------------------
@@ -706,7 +707,7 @@ def main():
         no_de_values.append(no_loss)
         one_de_values.append(one_loss)
         two_de_values.append(two_loss)
-
+    
     #-------------------------------------------------------------------------------------
     # PARTICLE SWARM
     #-------------------------------------------------------------------------------------
