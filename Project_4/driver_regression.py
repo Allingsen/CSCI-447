@@ -137,7 +137,7 @@ def plot_loss_functions(zero_BP_layer, one_BP_layer, two_BP_layer,
 
     fig.legend(handles, labels.keys(), loc='center left')
 
-    plt.savefig('Project_3/figures/' + DATASET_CALLED +'_fig.png')
+    plt.savefig('Project_4/figures/' + DATASET_CALLED +'_fig.png')
 
 def loss_functions(estimates:np.array, actual:np.array):
         '''Calculates preiciosn and recall'''
@@ -719,7 +719,7 @@ def main():
     plot_loss_functions(no_bp_values, one_bp_values, two_bp_values,
                         no_ga_values, one_ga_values, two_ga_values,
                         no_de_values, one_de_values, two_de_values,
-                        None, None, None) # <- TODO: replace this with PSO lists of values
+                        fold_performances_no, fold_performances_one, fold_performances_two) # <- TODO: replace this with PSO lists of values
     
 if __name__ == '__main__':
     main()
