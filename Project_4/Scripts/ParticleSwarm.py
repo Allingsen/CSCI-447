@@ -27,7 +27,9 @@ class ParticleSwarm():
         self.max_epochs = max_epochs
         self.epoch = 0
 
+    #This method initializes the population of neural networks
     def initialize_population(self):
+        #Generate a population of networks with size self.population_size
         for i in range(self.population_size):
             NN = NeuralNetworkPSO(self.inputs, self.hidden_layers, self.nodes, self.classification, self.inertial_weight, self.inertia_max, self.inertia_min, self.max_epochs, self.cognitive_weight, self.social_weight, self.batch_size, self.max_velocity, self.num_of_classes, self.class_names)
             NN.position = NN.vectorize()
@@ -47,6 +49,7 @@ class ParticleSwarm():
 
         #While the positions of each network change by greater than 0.1%...
         while(not converged):
+            print(f"EPOCH {self.epoch}")
             fitnesses = {}
             old_positions = []
             new_positions = []
@@ -99,26 +102,3 @@ class ParticleSwarm():
             counter += 1
         best = self.population[min(fitnesses, key=fitnesses.get)]
         return(best)
-
-'''#2 features with values 1 or 2
-inputs = np.random.randint(1, 3, size=(10, 3))
-nodes = [3, 2]
-hidden_layers = 2
-classification = False
-inertial_weight = 1.2
-cognitive_weight = social_weight = 1.494
-population_size = 5
-dataset_size = 2
-max_velocity = 0.5
-class_names = []
-inertia_max = 1.2
-inertia_min = 0.4
-max_epochs = 1000
-
-PSO = ParticleSwarm(inertial_weight, inertia_max, inertia_min, max_epochs, cognitive_weight, social_weight, population_size, dataset_size, inputs, hidden_layers, nodes, classification, 1, class_names, max_velocity)
-start = time.time()
-PSO.initialize_population()
-PSO.swarm()
-end = time.time()
-print(f"\nCompleted in: {end - start} seconds")
-PSO.select_model().get_state()'''
