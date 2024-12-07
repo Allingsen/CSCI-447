@@ -94,39 +94,7 @@ class NeuralNetworkPSO():
             print(f'First Layer Type: {cur_layer.version}, Number of Nodes: {cur_layer.num_nodes}, Number of Inputs to each Node: {len(cur_layer.nodes[0].weights)}')
             cur_layer = cur_layer.next_layer
 
-    '''def train_data(self):
-        Feeds data through the network, tuning weights using minibatch backprop
-        #print("ENTERED")
-        cur_layer = self.inputLayer
-        while(cur_layer.next_layer != None):
-            cur_layer = cur_layer.next_layer
-        output_layer = cur_layer
-        # Counter used for mini-batches
-        counter = 0
-        # Saves the predicted values and the acutal values
-        actual_val = np.array([None]*self.batch_size)
-        predicted_val = np.array([None]*self.batch_size)
-        all_actual = np.array([None]*len(self.inputs))
-        all_pred = np.array([None]*len(self.inputs))
-        # Iterates through all inputs
-        for no,i in enumerate(self.inputs):
-            actual_val[counter] = i[-1]
-            predicted_val[counter] = self.get_prediction(i[:-1])
-            all_actual[no] = i[-1]
-            all_pred[no] = predicted_val[counter]
-            counter += 1
-            # If the minibatch has been iterated through, perform backprop
-            if counter == self.batch_size:
-                
-                probabilities_list = output_layer.get_probabilities()
-                error_signal = self.error_signal(predicted_val, actual_val, probabilities_list)
-                self.update(error_signal)
-                probabilities_list.clear()
-                output_layer.probabilities.clear()
-                counter = 0
-
-        return all_actual, all_pred'''
-
+    #Feeds data through the network and obtains predicted and real values
     def test_data(self, examples: np.array) -> tuple:
         actual_val = np.array([None]*len(examples))
         predicted_val = np.array([None]*len(examples))
@@ -136,6 +104,7 @@ class NeuralNetworkPSO():
 
         return actual_val, predicted_val    
 
+    #
     def get_fitness(self):
         cur_layer = self.inputLayer
         while(cur_layer.next_layer != None):
@@ -155,7 +124,7 @@ class NeuralNetworkPSO():
             all_actual[no] = i[-1]
             all_pred[no] = predicted_val[counter]
             counter += 1
-            # If the minibatch has been iterated through
+            # If the minibatch has been iterated through, update pbest and obtain the error to be used for fitness
             if counter == self.batch_size:             
                 probabilities_list = output_layer.get_probabilities()
                 error_signal = self.error_signal(predicted_val, actual_val, probabilities_list)
@@ -188,16 +157,23 @@ class NeuralNetworkPSO():
             social.append((self.social_weight * self.r_2) * (self.gbest[i] - self.position[i]))
         for i in range(len(self.velocity)):
             val = wv[i] + cognitive[i] + social[i]
+
+            #Velocity clamping
             if(abs(val) > self.max_velocity):
                 if(val < 0):
                     val = -self.max_velocity
                 else:
                     val = self.max_velocity
             new_vel.append(val)
+
+        #Velocity update
         self.velocity = new_vel
+
+        #Position update
         for i in range(len(self.velocity)):
             self.position[i] = self.position[i] + self.velocity[i]
 
+        #Update current epoch
         self.iteration += 1
 
         #Linearly decrease inertial weight to focus more on exploitation over time
@@ -224,6 +200,7 @@ class NeuralNetworkPSO():
         self.r_1 = random.random()
         self.r_2 = random.random()
 
+    #Get the predicted value for one data point
     def get_prediction(self, point: np.array) -> float:
         '''Gets the predictions of the network at a specified point'''
         cur_layer = self.inputLayer
@@ -287,12 +264,14 @@ class NeuralNetworkPSO():
                 error_vector.append(np.abs(predicted_values[i] - actual_values[i]))
             return(error_vector)
 
+    #Gets the weights feeding into the output layer
     def get_weights(self):
         cur_layer = self.inputLayer
         while(cur_layer.next_layer != None):
             cur_layer = cur_layer.next_layer
         return(cur_layer.weight_matrix)
     
+    #Prints the current state of the network (layers, weights, activations, etc.)
     def get_state(self):
         cur_layer = self.inputLayer
         while(cur_layer != None):
