@@ -10,11 +10,11 @@ import feedForwardNN
 import time
 
 # Forest Fires Data Set
-DATASET_CALLED = 'forestfires'
-DATASET = 'Project_4/datasets/forestfires.data'
-DATASET_NAMES = ['x', 'y', 'month', 'day', 'ffmc', 'dmc', 'dc', 'isi', 'temp', 'rh', 'wind', 'rain', 'class']
-DATASET_CLASS = False
-NUM_NODES = [7,7]
+#DATASET_CALLED = 'forestfires'
+#DATASET = 'Project_4/datasets/forestfires.data'
+#DATASET_NAMES = ['x', 'y', 'month', 'day', 'ffmc', 'dmc', 'dc', 'isi', 'temp', 'rh', 'wind', 'rain', 'class']
+#DATASET_CLASS = False
+#NUM_NODES = [7,7]
 
 # Abalone Dataset
 #DATASET_CALLED = 'abalone'
@@ -24,11 +24,11 @@ NUM_NODES = [7,7]
 #NUM_NODES = [5,5]
 
 # Machine Dataset
-#DATASET_CALLED = 'machine'
-#DATASET = 'Project_4/datasets/machine.data'
-#DATASET_NAMES = ['id', 'model', 'myct', 'mmin', 'mmax', 'cach', 'chmin', 'chmax', 'prp', 'class']
-#DATASET_CLASS = False
-#NUM_NODES = [6,6]
+DATASET_CALLED = 'machine'
+DATASET = 'Project_4/datasets/machine.data'
+DATASET_NAMES = ['id', 'model', 'myct', 'mmin', 'mmax', 'cach', 'chmin', 'chmax', 'prp', 'class']
+DATASET_CLASS = False
+NUM_NODES = [6,6]
 
 def plot_loss_functions(zero_BP_layer, one_BP_layer, two_BP_layer,
                         zero_GA_layer, one_GA_layer, two_GA_layer,
@@ -148,8 +148,8 @@ def loss_functions(estimates:np.array, actual:np.array):
 
 def main():
     # Creates a data process instance with accurate information from the .NAMES file
-    data = DataProcess(names=DATASET_NAMES,cat_class=False,regression=True) # <- TODO: Abalone and Forest Fire Dataset
-    #data = DataProcess(names=DATASET_NAMES,cat_class=False,regression=True, id_col=['id', 'model'])
+    #data = DataProcess(names=DATASET_NAMES,cat_class=False,regression=True) # <- TODO: Abalone and Forest Fire Dataset
+    data = DataProcess(names=DATASET_NAMES,cat_class=False,regression=True, id_col=['id', 'model'])
 
     # Loads the data set, creates the tuning set, then splits into ten folds
     data.loadCSV(DATASET)
@@ -162,7 +162,7 @@ def main():
     print("------------------------BP------------------------")
     # Hyperparameters
     learning_rates = [0.005, 0.01, 0.05, 0.1]
-    batch_sizes = [12, 43] #<- TODO: Must be changed with every dataset
+    batch_sizes = [11, 19] #<- TODO: Must be changed with every dataset
 
     # Best Hyperparameter storage
     best_params_no = {}
@@ -342,7 +342,7 @@ def main():
             two_hidden.train_data()
             two_weights = new_two_weights
             new_two_weights = two_hidden.get_chromosome()
-
+        print('-----')
         # Tests on the tuning set, gets loss function
         actual_zero, predicted_zero = no_hidden.test_data(i.to_numpy())
         actual_one, predicted_one = one_hidden.test_data(i.to_numpy())
@@ -358,8 +358,7 @@ def main():
     
     #-------------------------------------------------------------------------------------
     # Population is used in all the following methods, so it is only defined once
-    population_size = [4, 6, 10, 16]
-    
+    population_size = [10, 20, 50, 100]
     #-------------------------------------------------------------------------------------
     
     #-------------------------------------------------------------------------------------
@@ -440,16 +439,17 @@ def main():
     no_ga_values = []
     one_ga_values = []
     two_ga_values = []
-    print('------')
+    
     for i in folds:
         # Tests on the tuning set, gets loss function
         actual_zero, predicted_zero = best_net_no.test_data(i.to_numpy())
         actual_one, predicted_one = best_net_one.test_data(i.to_numpy())
         actual_two, predicted_two = best_net_two.test_data(i.to_numpy())
+        print('-----')
         no_loss = loss_functions(predicted_zero.astype(float), actual_zero)
         one_loss = loss_functions(predicted_one.astype(float), actual_one)
         two_loss = loss_functions(predicted_two.astype(float), actual_two)
-
+        
         # Saves the loss functions across all folds
         no_ga_values.append(no_loss)
         one_ga_values.append(one_loss)
@@ -533,16 +533,17 @@ def main():
     no_de_values = []
     one_de_values = []
     two_de_values = []
-    print('------')
+    
     for i in folds:
         # Tests on the tuning set, gets loss function
         actual_zero, predicted_zero = best_net_no.test_data(i.to_numpy())
         actual_one, predicted_one = best_net_one.test_data(i.to_numpy())
         actual_two, predicted_two = best_net_two.test_data(i.to_numpy())
+        print('-----')
         no_loss = loss_functions(predicted_zero.astype(float), actual_zero)
         one_loss = loss_functions(predicted_one.astype(float), actual_one)
         two_loss = loss_functions(predicted_two.astype(float), actual_two)
-
+        
         # Saves the loss functions across all folds
         no_de_values.append(no_loss)
         one_de_values.append(one_loss)
